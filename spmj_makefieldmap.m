@@ -139,9 +139,10 @@ J.anat = [];
 % Match the anatomical image to the distortion corrected EPI:
 J.matchanat = 0;
 
-
+% Adding the imaging raw data folder for correction of EPIs. 
+% This is mainly for the quality control of field map correction:
 if (isempty(rawdataDir))
-    rawdataDir=fullfile(dataDir, 'imaging_data_raw', subj_name, subfolderRawdata);
+    rawdataDir = fullfile(dataDir, 'imaging_data_raw', subj_name, subfolderRawdata);
 end
 
 % Adding the EPI sessions/runs images:

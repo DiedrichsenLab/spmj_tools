@@ -1,2 +1,2 @@
 # spmj_tools
-Tools to run SPM12 jobs
+Tools to create and run SPM12 jobs

@@ -44,8 +44,15 @@ subfolderFieldmap = '';
 % Option to use 3D images:
 use3D = false;
 
+% fieldmap parameters:
+et1 = 4.92;
+et2 = 7.38;
+tert = 0.7 * 90 * 1/2;
+
 % Handling the input arguments:
-vararginoptions(varargin,{'prefix', 'image', 'subfolderRawdata', 'subfolderFieldmap', 'use3D','rawdataDir'});
+vararginoptions(varargin,{'prefix', 'image', 'subfolderRawdata', 'subfolderFieldmap', 'use3D', 'rawdataDir', 'et1', 'et2', 'tert'});
+
+disp(tert)
 
 % Directory of the spm toolbox:
 spm_dir = fileparts(which('spm'));
@@ -61,7 +68,7 @@ spmVer = spm('Ver');
 
 %_______DEFAULTS Values_________________________________
 % Echo times for magnitude images. Can be found in the meta data of the images. Default parameter for CFMM 3T scanner:
-J.defaults.defaultsval.et = [4.92 7.38];
+J.defaults.defaultsval.et = [et1 et2];
 
 % If masking brain is on, the magnitude image is used to mask the brain:
 J.defaults.defaultsval.maskbrain = 1;
@@ -72,7 +79,7 @@ J.defaults.defaultsval.blipdir = -1;
 
 % Total EPI readout time = echo spacing (in ms) * base resolution (also knows as number of echos).  
 % If you use GRAPPA acceleration, you need to divide the total number of echos by two:
-J.defaults.defaultsval.tert = 0.7 * 90 * 1/2;
+J.defaults.defaultsval.tert = tert;
 
 % EPI fieldmap or non-EPI. In CFMM 3T gradient echo imaging is used for
 % field map acquisition which is a non-EPI sequence:

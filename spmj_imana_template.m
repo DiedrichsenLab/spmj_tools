@@ -8,24 +8,17 @@ function varargout = spmj_imana_template(what,varargin)
 % Define the base directory of data:
 baseDir = fullfile(somePath,'data/');
 
-fieldmapsDir    = fullfile(baseDir, 'fieldmaps');dircheck(fieldmapsDir);
-behaviourDir    = fullfile(baseDir, 'behavioural_data');dircheck(behaviourDir);
-analyzeDir 		= fullfile(baseDir, 'analyze');dircheck(analyzeDir);
-anatomicalDir   = fullfile(baseDir, 'anatomicals');dircheck(anatomicalDir);
-imagingDirRaw   = fullfile(baseDir, 'imaging_data_raw');dircheck(imagingDirRaw);
-imagingDir      = fullfile(baseDir, 'imaging_data');dircheck(imagingDir);
-freesurferDir   = fullfile(baseDir, 'surfaceFreesurfer');dircheck(freesurferDir)
-caretDir        = fullfile(baseDir, 'surfaceCaret');dircheck(caretDir);
-regDir          = fullfile(baseDir, 'RegionOfInterest');dircheck(regDir);
-figDir          = fullfile(baseDir, 'figures');dircheck(figDir);
-BGDir           = fullfile(anatomicalDir,'basal_ganglia');dircheck(BGDir);
-statsDir        = fullfile(baseDir,'stats'); dircheck(statsDir);
-physioDir       = fullfile(baseDir,'physio_data'); dircheck(physioDir);
-
-dirNames        = {'baseDir','behavDir','analyzeDir','imagingDir','imagingDirRaw',...
-                   'anatomicalDir','freesurferDir','caretDir','regDir',...
-                   'physioDir','figDir','statsDir'};
-
+fieldmapsDir    = fullfile(baseDir, 'fieldmaps');
+behaviourDir    = fullfile(baseDir, 'behavioural_data');
+analyzeDir 		= fullfile(baseDir, 'analyze');
+anatomicalDir   = fullfile(baseDir, 'anatomicals');
+imagingDirRaw   = fullfile(baseDir, 'imaging_data_raw');
+imagingDir      = fullfile(baseDir, 'imaging_data');
+glmDir          = fullfile(baseDir, 'glm_firstlevel_1');
+freesurferDir   = fullfile(baseDir, 'surfaceFreesurfer');
+caretDir        = fullfile(baseDir, 'surfaceCaret');
+regDir          = fullfile(baseDir, 'RegionOfInterest');
+physioDir       = fullfile(baseDir,'physio_data');
 
 %% subject info
 
@@ -131,7 +124,8 @@ switch(what)
                           'subfolderFieldmap',subfolderFieldmap);
             end
         end
-            
+    case 'GLM:make_glm_1'
+        
 end
 
 

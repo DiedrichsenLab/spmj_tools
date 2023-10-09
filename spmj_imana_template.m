@@ -6,25 +6,25 @@ function varargout = spmj_imana_template(what,varargin)
 
 %% Directory specification
 % Define the base directory of data:
-baseDir = fullfile(somePath,'data/');
+baseDir = somePath;
 
-fieldmapsDir    = fullfile(baseDir, 'fieldmaps');
-behaviourDir    = fullfile(baseDir, 'behavioural_data');
-analyzeDir 		= fullfile(baseDir, 'analyze');
 anatomicalDir   = fullfile(baseDir, 'anatomicals');
-imagingDirRaw   = fullfile(baseDir, 'imaging_data_raw');
-imagingDir      = fullfile(baseDir, 'imaging_data');
-glmDir          = fullfile(baseDir, 'glm_firstlevel_1');
+imagingDirRaw   = fullfile(baseDir, 'imaging_data_raw'); % Imaging data in nifti format (.nii) 
+imagingDir      = fullfile(baseDir, 'imaging_data');     % Preprocessed imaging data 
+behaviourDir    = fullfile(baseDir, 'behavioural_data');
 freesurferDir   = fullfile(baseDir, 'surfaceFreesurfer');
-caretDir        = fullfile(baseDir, 'surfaceCaret');
+surfwbDir        = fullfile(baseDir, 'surfaceWB');
+analyzeDir 		= fullfile(baseDir, 'analyze');
+glmDir          = fullfile(baseDir, 'glm_firstlevel_1');
 regDir          = fullfile(baseDir, 'RegionOfInterest');
 physioDir       = fullfile(baseDir,'physio_data');
 
 %% subject info
 
 % Read from participants .tsv file =======================
-pinfo = datload('data/participants.tsv');
-
+pinfo = dload(fullfile(baseDir,'participants.tsv'));
+subj_id = pinfo.participant_id; 
+sn = [1:length(subj_id)];
 
 %% MAIN OPERATION =========================================================
 
@@ -125,9 +125,7 @@ switch(what)
             end
         end
 <<<<<<< Updated upstream
-    case 'GLM:make_glm_1'
-        
-=======
+
     case 'GLM:make_glm_1'   
         % make the design matrix for the glm
         % models each condition as a separate regressors
@@ -135,7 +133,7 @@ switch(what)
         % represents all the instances
         % nishimoto_imana('GLM:design1', 'sn', [6])
         
-        sn = subj_id;
+        sn = [1:length(pinfo.participant_id)];
         hrf_cutoff = Inf;
         prefix = 'r'; % prefix of the preprocessed epi we want to use
         glm = 1;
@@ -236,6 +234,7 @@ switch(what)
                             
                         end % ic (conditions)
                         
+                        % Regressors of no interest 
                        J.sess(run).multi     = {''};
                        J.sess(run).regress   = struct('name', {}, 'val', {});
                        J.sess(run).multi_reg = {''};

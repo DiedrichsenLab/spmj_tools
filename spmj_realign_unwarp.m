@@ -77,7 +77,7 @@ for j=1:numel(run)
             
     end
     J.data(j).scans = scans;
-    J.data(j).pmscan = {fullfile(dataDir, 'fieldmaps',subj_name,subfolderFieldmap,['vdm5_sc',subj_name,'_phase_session',num2str(j),'.nii,1'])};
+    J.data(j).pmscan = {fullfile(dataDir, 'fieldmaps',subj_name,subfolderFieldmap,['vdm5_sc',subj_name,'_phase_run_',num2str(j),'.nii,1'])};
 end 
 
 matlabbatch{1}.spm.spatial.realignunwarp= J;

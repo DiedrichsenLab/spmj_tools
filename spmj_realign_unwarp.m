@@ -63,7 +63,7 @@ end;
 %_______images and fieldmap definition_________________________________
 for j=1:numel(run)
     if (isinf(endTR))  % All avaialble images: only works with 4d-nifits right now 
-        V = nifti(fullfile(rawdataDir,[prefix,subj_name,'_run',run{j},'.nii'])); 
+        V = nifti(fullfile(rawdataDir,[prefix,subj_name,'_run_',run{j},'.nii'])); 
         imageNumber=startTR:V.dat.dim(4); 
     else 
         imageNumber= startTR:endTR;

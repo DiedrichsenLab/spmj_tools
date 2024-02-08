@@ -27,9 +27,6 @@ rawdataDir='';
 
 vararginoptions(varargin,{'prefix', 'subfolderRawdata', 'subfolderFieldmap','use3D','rawdataDir'}); 
 
-% displaying whether using 3D files or not
-disp(['Using 3D: ' num2str(use3D)]);
-
 
 %_______DEFAULTS_________________________________
 J.eoptions.quality = 0.9;
@@ -76,9 +73,9 @@ for j=1:numel(run)
         end;
             
     end
-    J.data(j).scans = scans;
+    J.data(j).scans = scans';
     J.data(j).pmscan = {fullfile(dataDir, 'fieldmaps',subj_name,subfolderFieldmap,['vdm5_sc',subj_name,'_phase_run_',num2str(j),'.nii,1'])};
-end 
+end
 
 matlabbatch{1}.spm.spatial.realignunwarp= J;
 spm_jobman('run',matlabbatch);

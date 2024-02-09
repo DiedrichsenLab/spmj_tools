@@ -10,7 +10,6 @@ function spmj_bias_correct(Scans,varargin)
 %   all scans will be written with prefix b
 % New version for comaptibility with SPM12 
 segm=1;
-spmVer=spm('Ver');
 
 % Estimate the bias field using new segmentation toolbox
 vararginoptions(varargin,'segm');

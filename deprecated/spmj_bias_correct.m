@@ -42,29 +42,19 @@ if (segm)
     J.warp.affreg = 'mni';
     J.warp.samp = 3;
     J.warp.write = [0 0];
-    switch(spmVer)
-        case 'SPM12'
-            J.tissue(1).tpm = {[spm_Dir '/tpm/TPM.nii,1']};
-            J.tissue(2).tpm = {[spm_Dir '/tpm/TPM.nii,2']};
-            J.tissue(3).tpm = {[spm_Dir '/tpm/TPM.nii,3']};
-            J.tissue(4).tpm = {[spm_Dir '/tpm/TPM.nii,4']};
-            J.tissue(5).tpm = {[spm_Dir '/tpm/TPM.nii,5']};
-            J.tissue(6).tpm = {[spm_Dir '/tpm/TPM.nii,6']};
-            J.warp.mrf = 1;
-            J.warp.cleanup = 1;
-            J.warp.reg = [0 0.001 0.5 0.05 0.2];
-            J.warp.fwhm = 0;
-            matlabbatch{1}.spm.spatial.preproc=J;
-        case 'SPM8'
-            J.tissue(1).tpm = {[spm_Dir '/toolbox/Seg/TPM.nii,1']};
-            J.tissue(2).tpm = {[spm_Dir '/toolbox/Seg/TPM.nii,2']};
-            J.tissue(3).tpm = {[spm_Dir '/toolbox/Seg/TPM.nii,3']};
-            J.tissue(4).tpm = {[spm_Dir '/toolbox/Seg/TPM.nii,4']};
-            J.tissue(5).tpm = {[spm_Dir '/toolbox/Seg/TPM.nii,5']};
-            J.tissue(6).tpm = {[spm_Dir '/toolbox/Seg/TPM.nii,6']};
-            J.warp.reg = 4;
-            matlabbatch{1}.spm.tools.preproc8=J;
-    end;
+
+    J.tissue(1).tpm = {[spm_Dir '/tpm/TPM.nii,1']};
+    J.tissue(2).tpm = {[spm_Dir '/tpm/TPM.nii,2']};
+    J.tissue(3).tpm = {[spm_Dir '/tpm/TPM.nii,3']};
+    J.tissue(4).tpm = {[spm_Dir '/tpm/TPM.nii,4']};
+    J.tissue(5).tpm = {[spm_Dir '/tpm/TPM.nii,5']};
+    J.tissue(6).tpm = {[spm_Dir '/tpm/TPM.nii,6']};
+    J.warp.mrf = 1;
+    J.warp.cleanup = 1;
+    J.warp.reg = [0 0.001 0.5 0.05 0.2];
+    J.warp.fwhm = 0;
+    matlabbatch{1}.spm.spatial.preproc=J;
+
     spm_jobman('run',matlabbatch);
 end;
 

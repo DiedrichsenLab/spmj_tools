@@ -24,15 +24,16 @@ subfolderRawdata='';
 subfolderFieldmap='';
 use3D=false;
 rawdataDir=''; 
+rtm = 0;    % register to mean or first volume. default register to first volume of each run.
 
-vararginoptions(varargin,{'prefix', 'subfolderRawdata', 'subfolderFieldmap','use3D','rawdataDir'}); 
+vararginoptions(varargin,{'prefix', 'subfolderRawdata', 'subfolderFieldmap','use3D','rawdataDir','rtm'}); 
 
 
 %_______DEFAULTS_________________________________
 J.eoptions.quality = 0.9;
 J.eoptions.sep = 2;%4;                                                                                   
 J.eoptions.fwhm = 5;                                                                                  
-J.eoptions.rtm = 0; %why zero and not one                                                                                  
+J.eoptions.rtm = rtm; % register to mean -> 0: register to first volume of each run. 1: register to mean image of each run.                                                                          
 J.eoptions.einterp = 2;                                                                               
 J.eoptions.ewrap = [0 1 0];     %  wrap-around in the [x y z] direction during the estimation (ewrap)  wrap of the front of the head to the back of the head                                                                       
 J.eoptions.weight = {''};                                                                             

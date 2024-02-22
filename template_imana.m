@@ -4,7 +4,7 @@ function varargout = template_imana(what,varargin)
 % Don't forget to add path the required tools!
 
 
-%% Directory specification
+% Directory specification
 
 % Define the data base directory 
 
@@ -31,15 +31,13 @@ regDir          = 'RegionOfInterest';
 
 %% subject info
 
-% Read info from participants .tsv file =======================
+% Read info from participants .tsv file 
 pinfo = dload(fullfile(baseDir,'participants.tsv'));
 
-%% MAIN OPERATION =========================================================
-
+%% MAIN OPERATION 
 switch(what)
     case 'PREP:step1'           
         % All preprocessing steps by just one go (AC coordinates (loc_AC) are prerequisite)
-        
         % handling input args:
         sn = [];
         vararginoptions(varargin,{'sn'})
@@ -50,20 +48,20 @@ switch(what)
         % loop on subjects and preprocessing the data:
         for s = sn
             % BIDS transfers:
-            bmw1_imana_2024('BIDS:move_unzip_raw_anat','sn',s);
-            bmw1_imana_2024('BIDS:move_unzip_raw_func','sn',s);
-            bmw1_imana_2024('BIDS:move_unzip_raw_fmap','sn',s);
+            template_imana('BIDS:move_unzip_raw_anat','sn',s);
+            template_imana('BIDS:move_unzip_raw_func','sn',s);
+            template_imana('BIDS:move_unzip_raw_fmap','sn',s);
 
             % ANAT functions:
-            bmw1_imana_2024('ANAT:reslice_LPI','sn',s);
-            bmw1_imana_2024('ANAT:centre_AC','sn',s);
-            bmw1_imana_2024('ANAT:segmentation','sn',s);
+            template_imana('ANAT:reslice_LPI','sn',s);
+            template_imana('ANAT:centre_AC','sn',s);
+            template_imana('ANAT:segmentation','sn',s);
             
             % FUNC functions:
-            bmw1_imana_2024('FUNC:make_fmap','sn',s);
-            bmw1_imana_2024('FUNC:realign_unwarp','sn',s,'rtm',0);
-            bmw1_imana_2024('FUNC:move_realigned_images','sn',s,'prefix','u','rtm',0);
-            bmw1_imana_2024('FUNC:meanimage_bias_correction','sn',s,'prefix','u','rtm',0);
+            template_imana('FUNC:make_fmap','sn',s);
+            template_imana('FUNC:realign_unwarp','sn',s,'rtm',0);
+            template_imana('FUNC:move_realigned_images','sn',s,'prefix','u','rtm',0);
+            template_imana('FUNC:meanimage_bias_correction','sn',s,'prefix','u','rtm',0);
             % after this step, manual aligment of mean bias corrected image
             % and the anatomical is required.
         end
@@ -80,9 +78,9 @@ switch(what)
         % loop on subjects and preprocessing the data:
         for s = sn
             % FUNC:
-            bmw1_imana_2024('FUNC:coreg','sn',s,'prefix','u','rtm',0);
-            bmw1_imana_2024('FUNC:make_samealign','sn',s);
-            bmw1_imana_2024('make_maskImage','sn',s);
+            template_imana('FUNC:coreg','sn',s,'prefix','u','rtm',0);
+            template_imana('FUNC:make_samealign','sn',s);
+            template_imana('make_maskImage','sn',s);
         end
 
 

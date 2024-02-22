@@ -24,7 +24,7 @@ subfolderRawdata='';
 subfolderFieldmap='';
 use3D=false;
 rawdataDir=''; 
-rtm = 0;    % register to mean or first volume. default register to first volume of each run.
+rtm = 0;    % register to mean or first volume. default register to first volume of the first run.
 
 vararginoptions(varargin,{'prefix', 'subfolderRawdata', 'subfolderFieldmap','use3D','rawdataDir','rtm'}); 
 

@@ -52,13 +52,8 @@ tert = 0.7 * 90 * 1/2;
 % Handling the input arguments:
 vararginoptions(varargin,{'prefix', 'image', 'subfolderRawdata', 'subfolderFieldmap', 'use3D', 'rawdataDir', 'et1', 'et2', 'tert'});
 
-disp(tert)
-
 % Directory of the spm toolbox:
 spm_dir = fileparts(which('spm'));
-
-% Version of spm currently being used:
-spmVer = spm('Ver');
 
 % displaying whether using 3D files or not
 % disp(['Using 3D: ' num2str(use3D)])
@@ -104,12 +99,7 @@ J.defaults.defaultsval.uflags.ws = 1;
 
 % DEFAULTS Values - mflags: for segmentation and creation of the brain mask
 % Template file for segmentation to create brain mask:
-switch (spmVer)
-    case 'SPM12'
-        J.defaults.defaultsval.mflags.template = {fullfile(spm_dir,'canonical','avg152T1.nii')};
-    case 'SPM8'
-        J.defaults.defaultsval.mflags.template = {fullfile(spm_dir,'templates','T1.nii')};
-end
+J.defaults.defaultsval.mflags.template = {fullfile(spm_dir,'canonical','avg152T1.nii')};
 
 % FWHM of Gaussian filter for smoothing brain mask:
 J.defaults.defaultsval.mflags.fwhm = 5;

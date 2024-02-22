@@ -24,18 +24,16 @@ subfolderRawdata='';
 subfolderFieldmap='';
 use3D=false;
 rawdataDir=''; 
+rtm = 0;    % register to mean or first volume. default register to first volume of the first run.
 
-vararginoptions(varargin,{'prefix', 'subfolderRawdata', 'subfolderFieldmap','use3D','rawdataDir'}); 
-
-% displaying whether using 3D files or not
-disp(['Using 3D: ' num2str(use3D)]);
+vararginoptions(varargin,{'prefix', 'subfolderRawdata', 'subfolderFieldmap','use3D','rawdataDir','rtm'}); 
 
 
 %_______DEFAULTS_________________________________
 J.eoptions.quality = 0.9;
 J.eoptions.sep = 2;%4;                                                                                   
 J.eoptions.fwhm = 5;                                                                                  
-J.eoptions.rtm = 0; %why zero and not one                                                                                  
+J.eoptions.rtm = rtm; % register to mean -> 0: register to first volume of each run. 1: register to mean image of each run.                                                                          
 J.eoptions.einterp = 2;                                                                               
 J.eoptions.ewrap = [0 1 0];     %  wrap-around in the [x y z] direction during the estimation (ewrap)  wrap of the front of the head to the back of the head                                                                       
 J.eoptions.weight = {''};                                                                             
@@ -49,8 +47,8 @@ J.uweoptions.uwfwhm = 4;
 J.uweoptions.rem = 1;                                                                                 
 J.uweoptions.noi = 5;                                                                                 
 J.uweoptions.expround = 'Average';                                                                    
-J.uwroptions.uwwhich = [2 1]; %[2 1] with mean image without [2 0]
-J.uwroptions.rinterp = 4;                                                                             
+J.uwroptions.uwwhich = [2 1]; %[2 1]: with mean image. [2 0]: without 
+J.uwroptions.rinterp = 4;                                                                            
 J.uwroptions.wrap = [0 1 0];  %  wrap-around in the [x y z] direction during the reslicing (wrap)                                                                                
 J.uwroptions.mask = 1;                                                                                
 J.uwroptions.prefix = 'u'; 
@@ -63,7 +61,7 @@ end;
 %_______images and fieldmap definition_________________________________
 for j=1:numel(run)
     if (isinf(endTR))  % All avaialble images: only works with 4d-nifits right now 
-        V = nifti(fullfile(rawdataDir,[prefix,subj_name,'_run',run{j},'.nii'])); 
+        V = nifti(fullfile(rawdataDir,[prefix,subj_name,'_run_',run{j},'.nii'])); 
         imageNumber=startTR:V.dat.dim(4); 
     else 
         imageNumber= startTR:endTR;
@@ -76,9 +74,9 @@ for j=1:numel(run)
         end;
             
     end
-    J.data(j).scans = scans;
-    J.data(j).pmscan = {fullfile(dataDir, 'fieldmaps',subj_name,subfolderFieldmap,['vdm5_sc',subj_name,'_phase_session',num2str(j),'.nii,1'])};
-end 
+    J.data(j).scans = scans';
+    J.data(j).pmscan = {fullfile(dataDir, 'fieldmaps',subj_name,subfolderFieldmap,['vdm5_sc',subj_name,'_phase_run_',num2str(j),'.nii,1'])};
+end
 
 matlabbatch{1}.spm.spatial.realignunwarp= J;
 spm_jobman('run',matlabbatch);

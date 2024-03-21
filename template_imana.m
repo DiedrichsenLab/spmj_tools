@@ -280,7 +280,9 @@ switch(what)
         
         % changing the transform matrix translations to put AC near [0,0,0]
         % coordinates:
-        V.mat(1:3,4) = [pinfo.locACx(pinfo.sn==sn),pinfo.locACy(pinfo.sn==sn),pinfo.locACz(pinfo.sn==sn)];
+        R = V.mat(1:3,1:3);
+        t = -1 * R * [pinfo.locACx(pinfo.sn==sn),pinfo.locACy(pinfo.sn==sn),pinfo.locACz(pinfo.sn==sn)];
+        V.mat(1:3,4) = t;
 
         % writing the image with the changed header:
         spm_write_vol(V,dat);

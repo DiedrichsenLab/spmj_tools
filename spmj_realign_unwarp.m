@@ -19,6 +19,11 @@ function spmj_realign_unwarp(dataDir, subj_name, run, startTR, endTR, varargin)
 % 06/02/2012 subfolder option replaced with two options 'subfolderFieldmap' 'subfolderRawdata'
 % 23/10/2012 added rawdataDir to be able to overwrite the standard naming convention
 % 
+
+if startTR > 1
+    error('Set startTR=1')
+end
+
 prefix= 'a';
 subfolderRawdata='';
 subfolderFieldmap='';

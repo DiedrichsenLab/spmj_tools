@@ -22,6 +22,7 @@ function smpj_plot_mov_corr(file_list)
 % Example:
 %   file_list = {'path/to/rp_file1.txt', 'path/to/rp_file2.txt'};
 %   smpj_plot_mov_corr(file_list);
+% by Marco Emanuele, March 2024
 
 
 mov = []; % To store concatenated movement data

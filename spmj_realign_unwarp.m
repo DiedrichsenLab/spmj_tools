@@ -21,7 +21,9 @@ function spmj_realign_unwarp(dataDir, subj_name, run, startTR, endTR, varargin)
 % 
 
 if startTR > 1
-    error('Set startTR=1')
+    error(['Please set StartTR=1. Setting StartTR>0 leads the skipped ' ...
+        'volumes in the 4D Nifti file to be set at 0, rather than excluded' ...
+        'from the timeseries. This later disrupt GLM estimation.'])
 end
 
 prefix= 'a';

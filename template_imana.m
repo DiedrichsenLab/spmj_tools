@@ -11,15 +11,14 @@ function varargout = template_imana(what,varargin)
 % automatic detection of datashare location:
 % After mounting the diedrichsen datashare on a mac computer.
 if isfolder('/Volumes/Diedrichsen_data$/data/<project_name>')
-    workdir='/Volumes/Diedrichsen_data$/data/<project_name>';
+    baseDir='/Volumes/Diedrichsen_data$/data/<project_name>';
 % After mounting the diedrichsen datashare on the CBS server.
 elseif isfolder('/cifs/diedrichsen/data/<project_name>')
-    workdir='/cifs/diedrichsen/data/<project_name>';
+    baseDir='/cifs/diedrichsen/data/<project_name>';
 else
-    fprintf('Workdir not found. Mount or connect to server and try again.');
+    fprintf('basedir not found. Mount or connect to server and try again.');
 end
 
-baseDir         = (sprintf('%s/',workdir));     % Base directory of the project
 BIDS_dir        = 'BIDS';                       % Raw data post AutoBids conversion
 behaviourDir    = 'behavioural_data';           % Timing data from the scanner
 imagingRawDir   = 'imaging_data_raw';           % Temporary directory for raw functional data
@@ -96,11 +95,11 @@ switch(what)
         end
 
         % path to the subj anat data:
-        anat_raw_path = fullfile(baseDir,BIDS_dir,sprintf('sub-s%.02d',sn),'ses-01','anat',[char(pinfo.AnatRawName(pinfo.sn==sn)) '.nii.gz']);
+        anat_raw_path = fullfile(baseDir,BIDS_dir,sprintf('sub-s%.02d',sn),'ses-01','anat',[pinfo.AnatRawName{pinfo.sn==sn}) '.nii.gz']);
 
         % destination path:
-        output_folder = fullfile(baseDir,anatomicalDir,char(pinfo.subj_id(pinfo.sn==sn)));
-        output_file = fullfile(output_folder,[char(pinfo.subj_id(pinfo.sn==sn)) '_anatomical_raw.nii.gz']);
+        output_folder = fullfile(baseDir,anatomicalDir,pinfo.subj_id{pinfo.sn==sn}));
+        output_file = fullfile(output_folder,[pinfo.subj_id{pinfo.sn==sn}) '_anatomical_raw.nii.gz']);
 
         if ~exist(output_folder,"dir")
             mkdir(output_folder);
@@ -150,8 +149,8 @@ switch(what)
                 func_raw_path = fullfile(baseDir,BIDS_dir,sprintf('sub-s%.02d',sn),sprintf('ses-%.02d',sess),'func',FuncRawName_tmp);
         
                 % destination path:
-                output_folder = fullfile(baseDir,imagingRawDir,char(pinfo.subj_id(pinfo.sn==sn)),['sess' num2str(sess)]);
-                output_file = fullfile(output_folder,[char(pinfo.subj_id(pinfo.sn==sn)) sprintf('_run_%.02d.nii.gz',run_list(i))]);
+                output_folder = fullfile(baseDir,imagingRawDir,pinfo.subj_id{pinfo.sn==sn}),['sess' num2str(sess)]);
+                output_file = fullfile(output_folder,[pinfo.subj_id{pinfo.sn==sn}) sprintf('_run_%.02d.nii.gz',run_list(i))]);
                 
                 if ~exist(output_folder,"dir")
                     mkdir(output_folder);
@@ -196,9 +195,9 @@ switch(what)
             phase_path = fullfile(baseDir,BIDS_dir,sprintf('sub-s%.02d',sn),sprintf('ses-%.02d',sess),'fmap',phase);
     
             % destination path:
-            output_folder = fullfile(baseDir,fmapDir,char(pinfo.subj_id(pinfo.sn==sn)),['sess' num2str(sess)]);
-            output_magnitude = fullfile(output_folder,[char(pinfo.subj_id(pinfo.sn==sn)) '_magnitude.nii.gz']);
-            output_phase = fullfile(output_folder,[char(pinfo.subj_id(pinfo.sn==sn)) '_phase.nii.gz']);
+            output_folder = fullfile(baseDir,fmapDir,pinfo.subj_id{pinfo.sn==sn}),['sess' num2str(sess)]);
+            output_magnitude = fullfile(output_folder,pinfo.subj_id{pinfo.sn==sn}) '_magnitude.nii.gz']);
+            output_phase = fullfile(output_folder,[pinfo.subj_id{pinfo.sn==sn}) '_phase.nii.gz']);
             
             if ~exist(output_folder,"dir")
                 mkdir(output_folder);
@@ -944,7 +943,7 @@ switch(what)
 end
 
 
-%%  =======================Project-specific Cases==================================
+%%  ======================= Cerebellar specific cases ==================================
 
 switch(what)
     case 'SUIT:isolate_segment'  
@@ -1058,10 +1057,80 @@ switch(what)
     
             fprintf('%s have been resliced into suit space \n',type)
         end
+end 
+        
+%%  ======================= Evoked response for rapid event related designs ==================================
+       
+switch (what)
+    case 'ROI_hrf_get'                   % Extract raw and estimated time series from ROIs
+        sn = varargin{1};
+        ROI = 'all';
+        pre=10;
+        post=10;
+        vararginoptions(varargin(3:end),{'ROI','pre','post'});
+        
+        glmDir = fullfile(baseDir,glmName{glm});
+        T=[];
+        for s=sn; 
+            subj = pinfo.subj_id{pinfo.sn==s}
+            fprintf('%s\n',subj);
 
+            % load SPM.mat
+            cd(fullfile(glmDir,subj));
+            load SPM;
+            
+            % load ROI definition (R)
+            load(fullfile(regDir,subj,[subj '_region.mat']));
+            
+            % extract time series data
+            [y_raw, y_adj, y_hat, y_res,B] = region_getts(SPM,R);
+            
+            D = spmj_get_ons_struct(SPM);
+            
+            for r=1:size(y_raw,2)
+                for i=1:size(D.block,1);
+                    D.y_adj(i,:)=cut(y_adj(:,r),pre,round(D.ons(i))-1,post,'padding','nan')';
+                    D.y_hat(i,:)=cut(y_hat(:,r),pre,round(D.ons(i))-1,post,'padding','nan')';
+                    D.y_res(i,:)=cut(y_res(:,r),pre,round(D.ons(i))-1,post,'padding','nan')';
+                end;
+                
+                % Add the event and region information to tje structure. 
+                len = size(D.event,1);                
+                D.SN        = ones(len,1)*s;
+                D.region    = ones(len,1)*r;
+                D.name      = repmat({R{r}.name},len,1);
+                D.type      = D.event; 
+                T           = addstruct(T,D);
+            end; 
+        end;
+        save(fullfile(regDir,sprintf('hrf.mat'),'-struct','T'); 
+        varargout={T}; 
+    case 'ROI_hrf_plot'                 % Plot extracted time series
+        s = varargin{1};
+        roi = varargin{2}; 
+        T = load(fullfile(regDir,'hrf.mat')); 
+        T = getrow(T,T.region==roi);
+        pre = 10;
+        post = 10;
 
-
-
+        
+        % Select a specific subset of things to plot 
+        subset      = ... 
+                
+        traceplot([-pre:post],T.y_adj,'errorfcn','stderr',...
+            'split',[T.regType],'subset',subset,...
+            'leg',regname(roi),'leglocation','bestoutside'); % ,
+        hold on;
+        traceplot([-pre:post],T.y_hat,'linestyle','--',...
+            'split',[T.regType],'subset',subset,...
+            'linewidth',3); % ,
+        drawline([-8 8 16],'dir','vert','linestyle','--');
+        drawline([0],'dir','horz','linestyle','--');
+        hold off;
+        xlabel('TR');
+        ylabel('activation');
+        drawline(0);
+end
 
 
 

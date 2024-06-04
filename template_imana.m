@@ -1142,5 +1142,133 @@ switch (what)
         drawline(0);
 end
 
+%%  ======================= Evoked response for rapid event related designs (Marco's edits and additions) ==================================
+       
+case 'HRF:ROI_hrf_get'                   % Extract raw and estimated time series from ROIs
+            
+    sn = [];
+    ROI = 'all';
+    pre=10;
+    post=10;
+    atlas = 'ROI';
+    glm = 4;
+
+    vararginoptions(varargin,{'ROI','pre','post', 'glm', 'sn', 'atlas'});
+
+    glmDir = fullfile(baseDir, [glmEstDir num2str(glm)]);
+    T=[];
+
+    subj_id = pinfo.subj_id{pinfo.sn==sn};
+    fprintf('%s\n',subj_id);
+
+    % load SPM.mat
+    cd(fullfile(glmDir,subj_id));
+    SPM = load('SPM.mat'); SPM=SPM.SPM;
+    
+    % load ROI definition (R)
+    R = load(fullfile(baseDir, regDir,subj_id,[subj_id '_' atlas '_region.mat'])); R=R.R;
+    
+    % extract time series data
+    [y_raw, y_adj, y_hat, y_res,B] = region_getts(SPM,R);
+    
+    D = spmj_get_ons_struct(SPM);
+    
+    for r=1:size(y_raw,2)
+        for i=1:size(D.block,1)
+            D.y_adj(i,:)=cut(y_adj(:,r),pre,round(D.ons(i))-1,post,'padding','nan')';
+            D.y_hat(i,:)=cut(y_hat(:,r),pre,round(D.ons(i))-1,post,'padding','nan')';
+            D.y_res(i,:)=cut(y_res(:,r),pre,round(D.ons(i))-1,post,'padding','nan')';
+            D.y_raw(i,:)=cut(y_raw(:,r),pre,round(D.ons(i))-1,post,'padding','nan')';
+        end
+        
+        % Add the event and region information to tje structure. 
+        len = size(D.event,1);                
+        D.SN        = ones(len,1)*sn;
+        D.region    = ones(len,1)*r;
+        D.name      = repmat({R{r}.name},len,1);
+        D.hem       = repmat({R{r}.hem},len,1);
+        D.type      = D.event; 
+        T           = addstruct(T,D);
+    end
+    
+    save(fullfile(baseDir,regDir, subj_id, sprintf('hrf.mat')),'T'); 
+    varargout{1} = T;
+
+case 'ROI:define'
+    
+    sn = [];
+    glm = 4;
+    atlas = 'ROI';
+    
+    vararginoptions(varargin,{'sn', 'glm', 'atlas'});
+
+    atlasDir = '/Volumes/diedrichsen_data$/data/Atlas_templates/fs_LR_32';
+    atlasH = {sprintf('%s.32k.L.label.gii', atlas), sprintf('%s.32k.R.label.gii', atlas)};
+    atlas_gii = {gifti(fullfile(atlasDir, atlasH{1})), gifti(fullfile(atlasDir, atlasH{1}))};
+
+    subj_id = pinfo.subj_id{pinfo.sn==sn};
+
+    Hem = {'L', 'R'};
+    R = {};
+    r = 1;
+    for h = 1:length(Hem)
+        for reg = 1:length(atlas_gii{h}.labels.name)
+
+            R{r}.white = fullfile(baseDir, wbDir, subj_id, [subj_id '.' Hem{h} '.white.32k.surf.gii']);
+            R{r}.pial = fullfile(baseDir, wbDir, subj_id, [subj_id '.' Hem{h} '.pial.32k.surf.gii']);
+            R{r}.image = fullfile(baseDir, [glmEstDir num2str(glm)], subj_id, 'mask.nii');
+            R{r}.linedef = [5 0 1];
+            key = atlas_gii{h}.labels.key(reg);
+            R{r}.location = find(atlas_gii{h}.cdata==key);
+            R{r}.hem = Hem{h};
+            R{r}.name = atlas_gii{h}.labels.name{reg};
+            R{r}.type = 'surf_nodes_wb';
+
+            r = r+1;
+        end
+    end
+
+    R = region_calcregions(R);
+    
+    save(fullfile(baseDir, regDir, subj_id, sprintf('%s_%s_region.mat',subj_id, atlas)), 'R');
+
+case 'HRF:ROI_hrf_plot'                 % Plot extracted time series
+    sn = [];
+    roi = [];
+    atlas = 'ROI';
+    hem = 'L';
+    regressor = [];
+
+    vararginoptions(varargin,{'sn', 'roi', 'atlas', 'regressor', 'hem'});
+
+    subj_id = pinfo.subj_id{pinfo.sn==sn};
+
+    T = load(fullfile(baseDir, regDir, subj_id, 'hrf.mat')); T=T.T;
+    T = getrow(T,strcmp(T.name, roi));
+    pre = 10;
+    post = 10;
+
+    
+    % Select a specific subset of things to plot 
+    subset      = find(contains(T.eventname, regressor) & strcmp(T.hem, hem));
+            
+    t1 = traceplot([-pre:post],T.y_hat, 'subset',subset, 'split', [], 'linestyle','--'); % ,
+    hold on;
+    t2 = traceplot([-pre:post],T.y_res, 'subset',subset, 'split', [], 'linestyle',':');
+    % drawline([-8 8 16],'dir','vert','linestyle','--');
+    % drawline([0],'dir','horz','linestyle','--');
+    drawline(0);
+
+    yyaxis right
+    t3 = traceplot([-pre:post],T.y_raw, 'subset',subset,'leg',[], 'leglocation','bestoutside', 'linestyle','-');
+    % traceplot([-pre:post],T.y_hat,'linestyle','--',...
+    %     'split',[T.type],'subset',subset,...
+    %     'linewidth',3); % ,
+    drawline(0);
+    
+    hold off;
+    xlabel('TR');
+    ylabel('activation');
+
 
 

@@ -816,7 +816,7 @@ switch(what)
                % Setting the params over J.bases.hrf.params does not work
                % anymore. We need to go over the default parameters 
                J.bases.hrf.params = [4.5 11];                                  % set to [] if running wls
-               defaults.stats.fmri.hrf[1:2]=J.bases.hrf.params; 
+               defaults.stats.fmri.hrf([1:2])=J.bases.hrf.params; 
                J.volt             = 1;
                J.global           = 'None';
                J.mask             = {fullfile(func_subj_dir,'ses-01','rmask_noskull.nii')};

@@ -695,6 +695,13 @@ switch(what)
         % For conditions with multiple repetitions, one regressor
         % represents all the instances
         
+        % Import globals from spm_defaults 
+        global defaults; 
+        if (isempty(defaults)) 
+            spm_defaults;
+        end 
+        
+        
         sn = [1:length(pinfo.participant_id)];
         hrf_cutoff = Inf;
         prefix = 'r'; % prefix of the preprocessed epi we want to use
@@ -806,7 +813,10 @@ switch(what)
                 
                J.fact             = struct('name', {}, 'levels', {});
                J.bases.hrf.derivs = [0 0];
+               % Setting the params over J.bases.hrf.params does not work
+               % anymore. We need to go over the default parameters 
                J.bases.hrf.params = [4.5 11];                                  % set to [] if running wls
+               defaults.stats.fmri.hrf[1:2]=J.bases.hrf.params; 
                J.volt             = 1;
                J.global           = 'None';
                J.mask             = {fullfile(func_subj_dir,'ses-01','rmask_noskull.nii')};

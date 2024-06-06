@@ -43,8 +43,9 @@ option.MaxFunEvals = 500;
 
 
 options = optimoptions('fmincon','Algorithm','interior-point'); % run interior-point algorithm
-p0 = [6 16 0 32]';  %% four parameters of interest (p(1), p(2), p(6), p(7))
-p_opt = fmincon(@(p) cost(p, Y,SPM), p0, [1 -1 0 0;0 1 0 -1],zeros(2,1), [], [], [2 5 0 16], [10 20 5 40],[],options);
+p0 = [6 16 0 32]';  %% initializtion of four parameters of interest (p(1), p(2), p(6), p(7))
+LB = [2 5 0 16]; UB = [10 20 5 40];
+p_opt = fmincon(@(p) cost(p, Y,SPM), p0, [1 -1 0 0;0 1 0 -1],zeros(2,1), [], [], LB, UB,[],options);
 SPM.xBF.bf = spm_hrf(SPM.xY.RT/16, [p_opt(1:2)' 1 1 6 p_opt(3:4)'], 16);  % replace the basis function with optimal hrf
 
 SPM = fMRI_design_changeBF(SPM); 
@@ -68,12 +69,8 @@ err = sum(sum(res.^2))/numel(res);
 
 
 function SPM = fMRI_design_changeBF(SPM)
-% modified by SKim, 20240521
-%function SPM=fMRI_design_changeBF(SPM,dur1,dur2)
 % Re-convolves the SPM structure with a new basis function
 % If second input argument is given, also changes duration of the event 
-
-
 Xx    = [];
 Xb    = [];
 iCs   = [];     % number of the run 

@@ -1293,7 +1293,7 @@ case 'HRF:fit' % finding optimal parameters for hrf
     err_before = sum(sum(Yres.^2))/numel(Yres);
     
 
-    [SPMf, Yhat, Yres, p_opt] = spmj_fit_hrf(SPM, data);  % 'fit',[1,2]'  
+    [SPMf, Yhat, Yres, p_opt] = spmj_fit_hrfparams(SPM, data);  % 'fit',[1,2]'  
     % Check Error after
     err_after = sum(sum(Yres.^2))/numel(Yres);
     F.bf_before = SPM.xBF.bf;

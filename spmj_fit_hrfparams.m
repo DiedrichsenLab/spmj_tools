@@ -48,7 +48,7 @@ option.MaxFunEvals = 500;
 p_def = spm_get_defaults('stats.fmri.hrf');
 options = optimoptions('fmincon','Algorithm','interior-point'); % run interior-point algorithm
 LB = [2 5]; UB = [10 20];
-p_opt = fmincon(@(p) cost(p, Y,SPM), p_def, [1 -1 0 0],0, [], [], LB, UB,[],options);
+p_opt = fmincon(@(p) cost(p, Y,SPM), p_def, [1 -1],0, [], [], LB, UB,[],options);
 
 SPM.xBF.bf = spm_hrf(SPM.xY.RT/16, [p_opt(1:2) p_def(3:end)], 16);  % replace the basis function with optimal hrf
 

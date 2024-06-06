@@ -19,8 +19,8 @@ function [SPM,Yhat,Yres, p_opt]=spmj_fit_hrf(SPM,Yraw)
 %        p(5) - ratio of response to undershoot                6
 %        p(6) - onset {seconds}                                0
 %        p(7) - length of kernel {seconds}                    32
-
 % --------------------------------------------------------------
+
 
 SPM.xBF.T        = 16; % time bins per scan
 SPM.xBF.T0       = 1; % first time bin

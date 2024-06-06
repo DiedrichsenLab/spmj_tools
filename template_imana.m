@@ -1271,4 +1271,37 @@ case 'HRF:ROI_hrf_plot'                 % Plot extracted time series
     ylabel('activation');
 
 
+case 'HRF:fit' % finding optimal parameters for hrf
+    glm = 0;
+    regN = [1:7]; % SMA, PMv, PMd, M1, S1, aSPL, pSPL
+    vararginoptions(varargin, {'sn','glm','regN'});
+    cd(fullfile(baseDir,sprintf(glmDir, glm), sprintf('S%02d', sn))); % cd to subject's GLM dir
+    load SPM;     
+    load(fullfile(baseDir, roiDir, sprintf('%your_ROI.mat', sprintf('S%02d', sn)))); % Load your ROI file
+    R = R(regN); % only use the specified regions
+    Data = region_getdata(SPM.xY.VY, R);
+    reg=[];
+    data=[];
+    for i = 1:length(Data)
+        reg = [reg ones(1,size(Data{i},2))*regN(i)];
+        data = [data Data{i}];
+    end
+    clear Data
+        
+    Y = spm_filter(SPM.xX.K, SPM.xX.W*data); % filter out low-frequence trends in Y
+    Yres = spm_sp('r', SPM.xX.xKXs, Y);
+    err_before = sum(sum(Yres.^2))/numel(Yres);
+    
+
+    [SPMf, Yhat, Yres, p_opt] = spmj_fit_hrf(SPM, data);  % 'fit',[1,2]'  
+    % Check Error after
+    err_after = sum(sum(Yres.^2))/numel(Yres);
+    F.bf_before = SPM.xBF.bf;
+    F.bf_after = SPMf.xBF.bf';
+    F.err_before = err_before;
+    F.err_after = err_after;
+    F.p_opt = p_opt;
+    save(fullfile(baseDir, roiDir, sprintf('%s_hrf_ROI_timeseries_glm%d.mat', sprintf('S%02d', sn), glm)), 'F');
+
+end
 

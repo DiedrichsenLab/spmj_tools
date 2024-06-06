@@ -64,7 +64,8 @@ Yhat   = SPM.xX.xKXs.X(:,reg_interest)*beta(reg_interest,:); %- predicted values
 function err=cost(p, Y,SPM)
 % cost function to be minimized for parameter fitting
 p_hrf = spm_get_defaults('stats.fmri.hrf');
-p_hrf([1:2 6 7]) = p; %% four parameters of interest (p(1), p(2), p(6), p(7))
+p_hrf(1:2) = p; %% four parameters of interest (p(1), p(2), p(6), p(7))
+% p_hrf([1:2 6 7]) = p; %% four parameters of interest (p(1), p(2), p(6), p(7))
 SPM.xBF.bf = spm_hrf(SPM.xY.RT/SPM.xBF.T, p_hrf, SPM.xBF.T);
 SPM = fMRI_design_changeBF(SPM);
 res = spm_sp('r',SPM.xX.xKXs,Y); % get the residual

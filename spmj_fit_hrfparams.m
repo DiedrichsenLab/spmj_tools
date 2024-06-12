@@ -1,4 +1,4 @@
-function [SPM,Yhat,Yres, p_opt]=spmj_fit_hrf(SPM,Yraw)
+function [SPM,Yhat,Yres, p_opt]=spmj_fit_hrfparams(SPM,Yraw)
 % Fits the two-gamma hrf fucntion to extracted time 
 % function [hrf,P,xBF]=spmj_fit_hrf(SPM,Y_raw,options);
 % INPUT: 
@@ -19,8 +19,8 @@ function [SPM,Yhat,Yres, p_opt]=spmj_fit_hrf(SPM,Yraw)
 %        p(5) - ratio of response to undershoot                6
 %        p(6) - onset {seconds}                                0
 %        p(7) - length of kernel {seconds}                    32
-
 % --------------------------------------------------------------
+
 
 SPM.xBF.T        = 16; % time bins per scan
 SPM.xBF.T0       = 1; % first time bin
@@ -34,19 +34,24 @@ SPM.xBF.dt       = SPM.xY.RT/16;
 
 % Filter and prepare the data 
 Y = spm_filter(SPM.xX.K,SPM.xX.W*Yraw);
-
-
 % optimization options
 option.TolX = 1E-10;
 option.Display = 'off';
 option.MaxFunEvals = 500;
 
-
+%% Optimizing four parameters, p(1), p(2), p(6), p(7)
+% options = optimoptions('fmincon','Algorithm','interior-point'); % run interior-point algorithm
+% LB = [2 5 0 16]; UB = [10 20 5 40];
+% p_opt = fmincon(@(p) cost(p, Y,SPM), p0, [1 -1 0 0;0 1 0 -1],zeros(2,1), [], [], LB, UB,[],options);
+% SPM.xBF.bf = spm_hrf(SPM.xY.RT/16, [p_opt(1:2)' 1 1 6 p_opt(3:4)'], 16);  % replace the basis function with optimal hrf
+%% Optimizing two parameters, p(1), p(2)
+p_def = spm_get_defaults('stats.fmri.hrf');
 options = optimoptions('fmincon','Algorithm','interior-point'); % run interior-point algorithm
-p0 = [6 16 0 32]';  %% initializtion of four parameters of interest (p(1), p(2), p(6), p(7))
-LB = [2 5 0 16]; UB = [10 20 5 40];
-p_opt = fmincon(@(p) cost(p, Y,SPM), p0, [1 -1 0 0;0 1 0 -1],zeros(2,1), [], [], LB, UB,[],options);
-SPM.xBF.bf = spm_hrf(SPM.xY.RT/16, [p_opt(1:2)' 1 1 6 p_opt(3:4)'], 16);  % replace the basis function with optimal hrf
+LB = [2 5]; UB = [10 20];
+p_opt = fmincon(@(p) cost(p, Y,SPM), p_def, [1 -1],0, [], [], LB, UB,[],options);
+
+SPM.xBF.bf = spm_hrf(SPM.xY.RT/16, [p_opt(1:2) p_def(3:end)], 16);  % replace the basis function with optimal hrf
+
 
 SPM = fMRI_design_changeBF(SPM); 
 
@@ -59,7 +64,8 @@ Yhat   = SPM.xX.xKXs.X(:,reg_interest)*beta(reg_interest,:); %- predicted values
 function err=cost(p, Y,SPM)
 % cost function to be minimized for parameter fitting
 p_hrf = spm_get_defaults('stats.fmri.hrf');
-p_hrf([1:2 6 7]) = p; %% four parameters of interest (p(1), p(2), p(6), p(7))
+p_hrf(1:2) = p; %% four parameters of interest (p(1), p(2), p(6), p(7))
+% p_hrf([1:2 6 7]) = p; %% four parameters of interest (p(1), p(2), p(6), p(7))
 SPM.xBF.bf = spm_hrf(SPM.xY.RT/SPM.xBF.T, p_hrf, SPM.xBF.T);
 SPM = fMRI_design_changeBF(SPM);
 res = spm_sp('r',SPM.xX.xKXs,Y); % get the residual

@@ -82,7 +82,6 @@ switch(what)
             template_imana('make_maskImage','sn',s);
         end
 
-
     case 'BIDS:move_unzip_raw_anat'
         % Moves, unzips and renames anatomical images from BIDS directory
         % to anatomicalDir
@@ -246,7 +245,6 @@ switch(what)
         V.mat(1:3,4)    = [0 0 0];
         spm_write_vol(V,dat);
 
-
     case 'ANAT:centre_AC'            
         % Description:
         % Recenters the anatomical data to the Anterior Commissure
@@ -286,7 +284,6 @@ switch(what)
         % writing the image with the changed header:
         spm_write_vol(V,dat);
 
-    
     case 'ANAT:segmentation'
         % Segmentation + Normalization
         % manually check results when done
@@ -687,7 +684,6 @@ switch(what)
             dest = fullfile(anatomicalDir,subj_id{sn},'rmask_gray.nii');
             movefile(source,dest);
         end
-
 
     case 'GLM:make_glm_1'    % design glm
         % make the design matrix for the glm
@@ -1293,7 +1289,7 @@ case 'HRF:fit' % finding optimal parameters for hrf
     err_before = sum(sum(Yres.^2))/numel(Yres);
     
 
-    [SPMf, Yhat, Yres, p_opt] = spmj_fit_hrf(SPM, data);  % 'fit',[1,2]'  
+    [SPMf, Yhat, Yres, p_opt] = spmj_fit_hrfparams(SPM, data);  % 'fit',[1,2]'  
     % Check Error after
     err_after = sum(sum(Yres.^2))/numel(Yres);
     F.bf_before = SPM.xBF.bf;

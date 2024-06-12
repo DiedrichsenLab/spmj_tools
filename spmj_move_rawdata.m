@@ -32,4 +32,4 @@ SPM.xY.VY = spm_vol(SPM.xY.P);
 % Save SPM if necessary 
 if (exist('SPM_name','var'))
     save SPM_name SPM; 
-end; 
+end

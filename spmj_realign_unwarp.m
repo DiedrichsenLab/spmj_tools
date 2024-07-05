@@ -8,6 +8,8 @@ function spmj_realign_unwarp(dataDir, subj_name, run, startTR, endTR, varargin)
 %               {'01' '02','03','04','05','06','07','08'} 
 %   startTR:    First image to align 
 %   endTR:      Last image to align (if INF, it will use all available)
+%               Array specifying a last image for each run or single value 
+%               for all runs 
 % VARARGINOPTIONS: 
 %   'prefix'            prefix for run name (default 'a'); 
 %   'scanType'          sub folder in your subject directory
@@ -18,12 +20,11 @@ function spmj_realign_unwarp(dataDir, subj_name, run, startTR, endTR, varargin)
 % Tobias Wiestler & Joern Diedrichsen
 % 06/02/2012 subfolder option replaced with two options 'subfolderFieldmap' 'subfolderRawdata'
 % 23/10/2012 added rawdataDir to be able to overwrite the standard naming convention
-% 
-
-if startTR > 1
-    error(['Please set StartTR=1. Setting StartTR>0 leads the skipped ' ...
-        'volumes in the 4D Nifti file to be set at 0, rather than excluded' ...
-        'from the timeseries. This later disrupt GLM estimation.'])
+% Sungshin Kim
+% 24/07/05 endTR option specifying a last image for each run
+%
+if startTR>1
+    error('Set startTR as 1');
 end
 
 prefix= 'a';
@@ -65,13 +66,16 @@ if (isempty(rawdataDir))
     rawdataDir=fullfile(dataDir, 'imaging_data_raw',subj_name,subfolderRawdata); 
 end; 
 
+if numel(endTR)==1 & ~isinf(endTR)
+    endTR = endTR*ones(1,numel(run));
+end
 %_______images and fieldmap definition_________________________________
 for j=1:numel(run)
     if (isinf(endTR))  % All avaialble images: only works with 4d-nifits right now 
         V = nifti(fullfile(rawdataDir,[prefix,subj_name,'_run_',run{j},'.nii'])); 
         imageNumber=startTR:V.dat.dim(4); 
-    else 
-        imageNumber= startTR:endTR;
+    else
+        imageNumber= startTR:endTR(j);
     end; 
     for i= 1:numel(imageNumber)
         if use3D
@@ -79,9 +83,9 @@ for j=1:numel(run)
         else
             scans{i}= fullfile(rawdataDir, [prefix,subj_name,'_run_',run{j},'.nii,',num2str(imageNumber(i))]);
         end;
-            
-    end
+    end;
     J.data(j).scans = scans';
+    clear scans; %% added by SKim on 20240704
     J.data(j).pmscan = {fullfile(dataDir, 'fieldmaps',subj_name,subfolderFieldmap,['vdm5_sc',subj_name,'_phase_run_',num2str(j),'.nii,1'])};
 end
 

@@ -697,7 +697,6 @@ switch(what)
             spm_defaults;
         end 
         
-        
         sn = [1:length(pinfo.participant_id)];
         hrf_cutoff = Inf;
         prefix = 'r'; % prefix of the preprocessed epi we want to use
@@ -727,29 +726,18 @@ switch(what)
                   J.timing.fmri_t  = 16;
                   J.timing.fmri_t0 = 8;
                   
+                  numTRs = pinfo.numTRs(pinfo.sn==sn);
+                        
+                  
                     % get the list of runs for the current session
-                    runs = run_list{ses};
                     for run = 1:2 %length(runs)
-                       %V = spm_vol(fullfile(base_dir,func_dir, subj_str{s},sprintf('ses-%02d', ses),sprintf('r%s_run-%02d.nii', subj_str{s}, run)));
-                       %numTRs = length(V);
-             
+                        
                        % get the path to the tsv file
                        tsv_path = fullfile(base_dir, func_dir,subj_str{s});
                        % get the tsvfile for the current run
-                       D = dload(fullfile(tsv_path,sprintf('ses-%02d',ses), sprintf('run%d.tsv', run)));
+                       D = dload(fullfile(tsv_path,sprintf('ses-%02d',ses), sprintf('run%d.tsv', run))); 
                        
-                       % Get the onset and duration of the last sentence
-                       lastSentenceOnset = D.onset(end);
-                       lastSentenceDuration = D.duration(end);
-                       
-                       % Convert the end time of the last sentence to TRs
-                       endTimeInTRs = ceil((lastSentenceOnset + lastSentenceDuration) / J.timing.RT);
-
-
-                       % Define scans up to the last sentence's end time
-                       N = cell(endTimeInTRs - numDummys, 1);
-                       
-                       for i = 1:(endTimeInTRs - numDummys)
+                       for i = 1:(numTRs - numDummys)
                            N{i} = fullfile(func_subj_dir, sprintf('ses-%02d', ses), sprintf('%s%s_run-%02d.nii, %d', prefix, subj_str{s}, run, i+numDummys)); % to exclude dummy volumes
                        end % i (image numbers)
                        J.sess(run).scans = N; % scans in the current runs
@@ -783,12 +771,7 @@ switch(what)
                             
                            % get onset and duration (should be in seconds)
                            onset    = D.onset(idx) - (J.timing.RT*numDummys);
-                           fprintf("The onset is %f\n", onset)
-                           if onset < 0
-                               warning("negative onset found")
-                           end
                            duration = D.duration(idx);
-                           fprintf("The duration is %f\n", duration);
                             
                            J.sess(run).cond(ic).onset    = onset;
                            J.sess(run).cond(ic).duration = duration;

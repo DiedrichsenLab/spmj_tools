@@ -712,25 +712,24 @@ switch(what)
  
                 % loop through runs within the current sessions
                 itaskUni = 0;
-                for ses = [1]
-                 % create a directory to save the design
-                  subj_est_dir = fullfile(base_dir, glm_first_dir,subj_str{s}, sprintf('ses-%02d',ses));
-                  dircheck(subj_est_dir)
+                % create a directory to save the design
+                subj_est_dir = fullfile(base_dir, glm_first_dir,subj_str{s};
+                dircheck(subj_est_dir)
                   
-                  T = []; % task/condition + session + run info
-                  J = []; % structure with SPM fields to make the design
+                T = []; % task/condition + session + run info
+                 J = []; % structure with SPM fields to make the design
                  
-                  J.dir            = {subj_est_dir};
-                  J.timing.units   = 'secs';
-                  J.timing.RT      = 1.3;
-                  J.timing.fmri_t  = 16;
-                  J.timing.fmri_t0 = 8;
+                 J.dir            = {subj_est_dir};
+                 J.timing.units   = 'secs';
+                 J.timing.RT      = 1.3;
+                 J.timing.fmri_t  = 16;
+                 J.timing.fmri_t0 = 8;
                   
                   numTRs = pinfo.numTRs(pinfo.sn==sn);
                         
                   
-                    % get the list of runs for the current session
-                    for run = 1:2 %length(runs)
+                   % get the list of runs for the current session
+                   for run = 1:2 %length(runs)
                         
                        % get the path to the tsv file
                        tsv_path = fullfile(base_dir, func_dir,subj_str{s});
@@ -755,13 +754,13 @@ switch(what)
                             
                            %
                            % filling in "reginfo"
-                           TT.sn        = s;
-                           TT.sess      = ses;
-                           TT.run       = run;
-                           TT.task_name = Dd.task_name(ic);
-                           TT.task      = ic;
-                           TT.taskUni   = itaskUni;
-                           TT.n_rep     = sum(idx);
+                           T.sn        = s;
+                           T.sess      = ses;
+                           T.run       = run;
+                           T.task_name = Dd.task_name(ic);
+                           T.task      = ic;
+                           T.taskUni   = itaskUni;
+                           T.n_rep     = sum(idx);
                             
                            % filling in fields of J (SPM Job)
                            J.sess(run).cond(ic).name = Dd.task_name{ic};

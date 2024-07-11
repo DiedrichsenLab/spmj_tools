@@ -734,10 +734,10 @@ switch(what)
                        % get the path to the tsv file
                        tsv_path = fullfile(base_dir, func_dir,subj_str{s});
                        % get the tsvfile for the current run
-                       D = dload(fullfile(tsv_path,sprintf('ses-%02d',ses), sprintf('run%d.tsv', run))); 
+                       D = dload(fullfile(tsv_path, sprintf('run%d.tsv', run))); 
                        
                        for i = 1:(numTRs - numDummys)
-                           N{i} = fullfile(func_subj_dir, sprintf('ses-%02d', ses), sprintf('%s%s_run-%02d.nii, %d', prefix, subj_str{s}, run, i+numDummys)); % to exclude dummy volumes
+                           N{i} = fullfile(func_subj_dir, sprintf('%s%s_run-%02d.nii, %d', prefix, subj_str{s}, run, i+numDummys)); % to exclude dummy volumes
                        end % i (image numbers)
                        J.sess(run).scans = N; % scans in the current runs
                         
@@ -754,13 +754,13 @@ switch(what)
                             
                            %
                            % filling in "reginfo"
-                           T.sn        = s;
-                           T.sess      = ses;
-                           T.run       = run;
-                           T.task_name = Dd.task_name(ic);
-                           T.task      = ic;
-                           T.taskUni   = itaskUni;
-                           T.n_rep     = sum(idx);
+                           TT.sn        = s;
+                           TT.sess      = ses;
+                           TT.run       = run;
+                           TT.task_name = Dd.task_name(ic);
+                           TT.task      = ic;
+                           TT.taskUni   = itaskUni;
+                           TT.n_rep     = sum(idx);
                             
                            % filling in fields of J (SPM Job)
                            J.sess(run).cond(ic).name = Dd.task_name{ic};
@@ -806,7 +806,7 @@ switch(what)
                 
                 
                dsave(fullfile(J.dir{1},sprintf('%s_reginfo.tsv', subj_str{s})), T);
-               fprintf('- estimates for glm_%d session %d has been saved for %s \n', glm, ses, subj_str{s});
+               fprintf('- estimates for glm_%d session %d has been saved for %s \n', glm, subj_str{s});
              end % ses (session)
             
             

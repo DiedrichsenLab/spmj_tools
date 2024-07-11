@@ -425,7 +425,7 @@ switch(what)
                                 
                 for r = runs
                     % Obtain the number of TRs for the current run
-                    for j = 1:numTRs - numDummys
+                    for j = 1:numTRs
                         data{r}{j,1} = fullfile(func_ses_subj_dir,sprintf('%s_run-%02d.nii,%d', subj_id, r,j));
                     end % j (TRs/images)
                 end % r (runs)            

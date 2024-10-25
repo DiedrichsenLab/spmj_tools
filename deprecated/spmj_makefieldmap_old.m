@@ -1,14 +1,25 @@
-function spmj_makefieldmap(fmap_dir,magnitude_img, phasediff_img, varargin)
-% function spmj_makefieldmap(varargin)
-%   fmap_dir: Directory that holds the fmap and will be used for output
-%   magnitude_img: Name of magnitude image 
-%   phasediff_img: name of phase difference image 
+function spmj_makefieldmap(dataDir, subj_name, run, varargin)
+% function spmj_makefieldmap(dataDir, subj_name, run, startTR, varargin)
+%   dataDir: data directory of the project (see standard directory
+%           structure)
+%   run: string for run identifier: 
+%           i.e. {'01'  '02','03','04','05','06','07','08'} 
+%   subj_name: For directory and filenames, e.g.  's05'
 % VARARGINOPTIONS 
-%   func_dir: Directory that holds the unziped imaging_data 
-%   epi_files: List of EPI-run files 
-%   et1: TE1 
-%   et2: TE2
-%   tert: Total time 
+%   prefix:  default 'a': Naming is <prefix><subjname>_run<runnumber>.nii
+%   image: Number of the image in run to which fieldmap should be aligned
+%               (default = 1) 
+%   scanType: sub folder in your subject directory
+%   subfolderFieldmap: subfolder in the fieldmap directory
+%   subfolderRawdata: subfolder in the imaging_data_raw directory
+%   rawdataDir:     forces rawdata Directory to different value from the
+%               standard naming 
+
+% Tobias Wiestler 2010
+% 26/April/2012 - Modified by Naveed Ejaz
+% Added support for 3D files while keeping backward compatibility for 4D
+% files
+
 % Prefix of the EPI data:
 prefix = '';
 
@@ -17,20 +28,25 @@ prefix = '';
 % the prefix 'u'. 
 image = 1;
 
-% Directory of the EPI data:
-func_dir = '';
+% Directory of the raw EPI data:
+rawdataDir = '';
 
-% Name of the files to align to 
-epi_files = {};
+% Subfolder of the Raw EPI data:
+subfolderRawdata = '';
+
+% Subfolder of the field map data:
+subfolderFieldmap = '';
+
+% Option to use 3D images:
+use3D = false;
 
 % fieldmap parameters:
 et1 = 4.92;
 et2 = 7.38;
 tert = 0.7 * 90 * 1/2;
-phase_encode = -1; % AP: -1 PA: +1 
 
 % Handling the input arguments:
-vararginoptions(varargin,{'func_dir','epi_files','et1', 'et2', 'tert','phase_encode'});
+vararginoptions(varargin,{'prefix', 'image', 'subfolderRawdata', 'subfolderFieldmap', 'use3D', 'rawdataDir', 'et1', 'et2', 'tert'});
 
 % Directory of the spm toolbox:
 spm_dir = fileparts(which('spm'));
@@ -50,7 +66,7 @@ J.defaults.defaultsval.maskbrain = 1;
 
 % Phase-enocding direction. Should be available in the imaging sequence specifications. 
 % Spm defines Anterior to Posterior as -1 and Posterior to Anterior as +1:
-J.defaults.defaultsval.blipdir = phase_encode;
+J.defaults.defaultsval.blipdir = -1;
 
 % Total EPI readout time = echo spacing (in ms) * base resolution (also knows as number of echos).  
 % If you use GRAPPA acceleration, you need to divide the total number of echos by two:
@@ -116,22 +132,30 @@ J.anat = [];
 % Match the anatomical image to the distortion corrected EPI:
 J.matchanat = 0;
 
-% Adding the EPI sessions/runs images. Either use sbref or first epi_image 
-for i=1:numel(epi_files)
-    J.session(i).epi ={fullfile(func_dir, epi_files{i})};
+% Adding the imaging raw data folder for correction of EPIs. 
+% This is mainly for the quality control of field map correction:
+if (isempty(rawdataDir))
+    rawdataDir = fullfile(dataDir, 'imaging_data_raw', subj_name, subfolderRawdata);
+end
+
+% Adding the EPI sessions/runs images:
+for i=1:numel(run)
+    if use3D
+        J.session(i).epi ={fullfile(rawdataDir, [prefix subj_name,'_run',run{i},'_',num2str(image),'.nii'])};
+    else
+        J.session(i).epi ={fullfile(rawdataDir, [prefix,subj_name,'_run_',run{i},'.nii,',num2str(image)])};
+    end
 end
 
 % Path to the phase image - Change the next two lines if you have a field
 % map for each run:
-J.phase ={fullfile(fmap_dir, phasediff_img)}; %,'_',num2str(run(1))
+J.phase ={fullfile(dataDir, 'fieldmaps', subj_name, subfolderFieldmap, [subj_name,'_phase.nii,1'])}; %,'_',num2str(run(1))
 
 % Path to the magnitude image:
-J.magnitude =  {fullfile(fmap_dir, magnitude_img)}; %,'_',num2str(run(1))
+J.magnitude =  {fullfile(dataDir, 'fieldmaps', subj_name, subfolderFieldmap, [subj_name,'_magnitude.nii,1'])}; %,'_',num2str(run(1))
 
 % Creating the Batch for the SPM:
 matlabbatch{1}.spm.tools.fieldmap.presubphasemag.subj= J;
 
 % Passing the created job to SPM:
 spm_jobman('run',matlabbatch);
-
-

@@ -1,26 +1,38 @@
-function spmj_realign_unwarp(subj_name, run_names, varargin)
-% spmj_realign_unwarp(subj_name, run_names)
+function spmj_realign_unwarp(dataDir, subj_name, run, varargin)
+% spmj_realign_unwarp(dataDir, subj_name, run, startTR, endTR)
 % INPUT: 
-%   subj_name:  Name for subdirectory and file-prefix (i.e. 's05')
-%   run_names:  Cell array of identifiers for the run 
+%   dataDir:    Root directory for the imaging structure (needs directories 
+%               imaging_data_raw and fieldmaos 
+%   subj_name:  Name for subdirectory and file-prefix (i.e. 's05') 
+%   run:        Cell array of identifiers for the run 
 %               {'run-01' 'run-02','run-03','run-04'} 
+%   startTR:    First image to align 
+%   endTR:      Last image to align (if INF, it will use all available)
+%               Array specifying a last image for each run or single value 
+%               for all runs 
 % VARARGINOPTIONS: 
-%   'sess_names':       optional session name if multiple scannning sesss=subfoldes are used 
+%   'prefix'            prefix for run name (default 'a'); 
 %   'scanType'          sub folder in your subject directory
-%   'fmap_dir'          folder in the fieldmap directory
-%   'rawdata_dir'       folder in the unaligned imaging_data_raw directory
-%   'base_dir':         Root directory for the imaging structure (needs directories 
-%                       imaging_data_raw and fieldmaps 
-%   'raw_name':         Different name for file ('run', vs. 'sbref')
-%                       defaults to 'run' 
-raw_name = 'run'; 
-rawdata_dir = ''; 
-fmap_dir = ''; 
-base_dir = ''; 
-sess_names = {}; 
+%   'subfolderFieldmap' subfolder in the fieldmap directory
+%   'subfolderRawdata'  subfolder in the imaging_data_raw directory
+%   'rawdataDir'        overwrites standard naming and forces routine to
+%                       use this folder for location of raw data 
+% Tobias Wiestler & Joern Diedrichsen
+% 06/02/2012 subfolder option replaced with two options 'subfolderFieldmap' 'subfolderRawdata'
+% 23/10/2012 added rawdataDir to be able to overwrite the standard naming convention
+% Sungshin Kim
+% 24/07/05 endTR option specifying a last image for each run
+%
+
+prefix= 'a';
+subfolderRawdata='';
+subfolderFieldmap='';
+use3D=false;
+rawdataDir=''; 
 rtm = 0;    % register to mean or first volume. default register to first volume of the first run.
 
-vararginoptions(varargin,{'prefix', 'fmap_dir','rawdata_dir','base_dir','target_dir','rtm','raw_name','sess_names'}); 
+vararginoptions(varargin,{'prefix', 'subfolderRawdata', 'subfolderFieldmap','use3D','rawdataDir','rtm'}); 
+
 
 %_______DEFAULTS_________________________________
 J.eoptions.quality = 0.9;
@@ -46,54 +58,33 @@ J.uwroptions.wrap = [0 1 0];  %  wrap-around in the [x y z] direction during the
 J.uwroptions.mask = 1;                                                                                
 J.uwroptions.prefix = 'u'; 
 
-if isempty(rawdata_dir)
-    rawdata_dir = fullfile(base_dir,'imaging_data_raw');
-end
-if isempty(fmap_dir)
-    fmap_dir = fullfile(base_dir,'fieldmaps');
-end 
 
+if (isempty(rawdataDir))
+    rawdataDir=fullfile(dataDir, 'imaging_data_raw',subj_name,subfolderRawdata); 
+end; 
+
+if numel(endTR)==1 & ~isinf(endTR)
+    endTR = endTR*ones(1,numel(run));
+end
 %_______images and fieldmap definition_________________________________
-% Flat hierarchy one imaging session 
-if (isempty(sess_names))
-    for j=1:numel(run_names)
-        file_name = fullfile(rawdata_dir,subj_name,sprintf('%s_%s.nii',subj_name,run_names{s}{j}));
-        if (V.dat.dim==3)
-            scans{1}= file_name;
-        else 
-            imageNumber=1:V.dat.dim(4); 
-            for i= 1:numel(imageNumber)
-                scans{i}= sprintf('%s,%d',file_name,i);
-            end
-        end
-        J.data(j).scans = scans';
-        clear scans; 
-        J.data(j).pmscan = {fullfile(dataDir, 'fieldmaps',subj_name,subfolderFieldmap,['vdm5_sc',subj_name,'_phase_',run_names{j},'.nii,1'])};
-    end 
-else  % Nested hierarchy with different subfolders for different sessions 
-    indx = 1; 
-    for s=1:numel(sess_names)
-        for j=1:numel(run_names{s})
-            file_name = fullfile(rawdata_dir,subj_name,sess_names{s},sprintf('%s_%s.nii',subj_name,run_names{s}{j}));
-            V = nifti(file_name);
-            if (length(V.dat.dim)==3) % 3dimage (likely sbref)
-                scans{1}= file_name;
-            else 
-                imageNumber=1:V.dat.dim(4); 
-                for i= 1:numel(imageNumber)
-                    scans{i}= sprintf('%s,%d',file_name,i);
-                end
-            end
-            J.data(indx).scans = scans';
-            J.data(indx).pmscan = {fullfile(fmap_dir,subj_name,sess_names{s},sprintf('vdm5_sc%s_%s_phasediff_run_%d.nii',subj_name,sess_names{s},j))};
-            indx = indx+1; 
-            clear scans; 
-        end
-    end
+for j=1:numel(run)
+    if (isinf(endTR))  % All avaialble images: only works with 4d-nifits right now 
+        V = nifti(fullfile(rawdataDir,[prefix,subj_name,'_run_',run{j},'.nii'])); 
+        imageNumber=startTR:V.dat.dim(4); 
+    else
+        imageNumber= startTR:endTR(j);
+    end; 
+    for i= 1:numel(imageNumber)
+        if use3D
+            scans{i}= fullfile(rawdataDir, [prefix subj_name,'_run',run{j},'_',num2str(imageNumber(i)),'.nii']);
+        else
+            scans{i}= fullfile(rawdataDir, [prefix,subj_name,'_run_',run{j},'.nii,',num2str(imageNumber(i))]);
+        end;
+    end;
+    J.data(j).scans = scans';
+    clear scans; %% added by SKim on 20240704
+    J.data(j).pmscan = {fullfile(dataDir, 'fieldmaps',subj_name,subfolderFieldmap,['vdm5_sc',subj_name,'_phase_run_',num2str(j),'.nii,1'])};
 end
 
 matlabbatch{1}.spm.spatial.realignunwarp= J;
 spm_jobman('run',matlabbatch);
-
-
-

@@ -13,6 +13,12 @@ function spmj_realign_unwarp(subj_name, run_names, varargin)
 %                       imaging_data_raw and fieldmaps 
 %   'raw_name':         Different name for file ('run', vs. 'sbref')
 %                       defaults to 'run' 
+% EXAMPLE USAGE: 
+% A. Single session experiment:
+% leave sesssion names empty, run_names is a single cell array of images
+% B.Multi session experiment:
+% sess_names = {'ses-01','ses-02}
+% run_names = {{'run-01' 'run-02','run-03','run-04' },{'run-01' 'run-02'}}
 raw_name = 'run'; 
 rawdata_dir = ''; 
 fmap_dir = ''; 

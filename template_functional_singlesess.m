@@ -75,10 +75,16 @@ function varargout = template_functional_singlesess(what, varargin)
     
         case 'BIDS:move_unzip_raw_fmap'
             % Moves, unzips and renames raw fmap images from BIDS
-            % directory. After you run this function you will find
-            % two files named <subj_id>_phase.nii and 
-            % <subj_id>_magnitude.nii in the 
-            % <project_id>/fieldmaps/<subj_id>/sess<N>/ directory.
+            % directory. After you run this function you will find two
+            % files named <subj_id>_phase.nii and <subj_id>_magnitude.nii
+            % in the <project_id>/fieldmaps/<subj_id>/ directory. The
+            % <subj_id>_phase.nii contains phase information derived from
+            % the MRI signal, reflecting local magnetic field
+            % inhomogeneities caused by factors such as tissue
+            % susceptibility differences (e.g., at air-tissue interfaces in
+            % the nasal cavities or sinuses). This phase information can be
+            % used to compute a fieldmap, which is essential for correcting
+            % geometric distortions (unwarping) in other MRI sequences.
             
             % handling input args:
             sn = [];
@@ -156,9 +162,14 @@ function varargout = template_functional_singlesess(what, varargin)
             
             % get subj_id
             subj_id = subj_row.participant_id{1};
+
+            % get runs (FuncRuns column needs to be in participants.tsv)    
+            runs = spmj_dotstr2array(subj_row.FuncRuns{1});
             
-            % Prefix of the functional files:
-            prefixepi  = '';
+            file_list = {}; % Initialize as an empty cell array
+            for run = runs
+                file_list{end+1} = replace(subj_row.FuncRawName, 'XX', sprinf('%02d', run));
+            end
 
             [et1, et2, tert] = spmj_et1_et2_tert(baseDir, subj_id, sn);
 
@@ -168,14 +179,15 @@ function varargout = template_functional_singlesess(what, varargin)
             % subfolderFieldmap = sprintf('sess%d',sess);
             % function to create the makefieldmap job and passing it to the SPM
             % job manager:
-            spmj_makefieldmap(baseDir,subj_id,runs, ...
+            spmj_makefieldmap(fmapDir, ...
+                              sprintf('%s_magnitude.nii', subj_id),...
+                              sprintf('%s_phase.nii', subj_id),...
+                              'phase_encode', -1, ... % It's -1 (A>>P) or 1 (P>>A) and can be found in imaging sequence specifications
                               'et1', et1, ...
                               'et2', et2, ...
                               'tert', tert, ...
-                              'image', 1, ... % remove numDummys?
-                              'prefix',prefixepi, ...
-                              'rawdataDir',fullfile(baseDir,imagingRawDir,subj_id), ...
-                              'subfolderFieldmap','');
+                              'func_dir',fullfile(baseDir,imagingRawDir,subj_id),...
+                              'epi_files', file_list);
         
         case 'FUNC:realign_unwarp'      
             % Do spm_realign_unwarp

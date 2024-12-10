@@ -38,7 +38,7 @@ function varargout = template_functional_singlesess(what, varargin)
             subj_id = subj_row.participant_id{1};
 
             % get runs (FuncRuns column needs to be in participants.tsv)    
-            runs = spmj_dotstr2array(sub_row.FuncRuns{1});
+            runs = spmj_dotstr2array(subj_row.FuncRuns{1});
 
             % loop on runs of sess:
             for run = runs

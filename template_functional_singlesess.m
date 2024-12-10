@@ -1,4 +1,19 @@
 function varargout = template_functional_singlesess(what, varargin)
+    
+    % Use a different baseDir when using your local machine or the cbs
+    % server. Add more directory if needed.
+    if isfolder("/path/to/project/local/directory/")
+        baseDir = "/path/to/project/local/directory/";
+    elseif isfolder("/path/to/project/cifs/directory/")
+        baseDir = "/path/to/project/cifs/directory/";
+    else
+        fprintf('Workdir not found. Mount or connect to server and try again.');
+    end
+
+    bidsDir = 'BIDS'; % Raw data post AutoBids conversion
+    imagingRawDir = 'imaging_data_raw'; % Temporary directory for raw functional data
+    imagingDir = 'imaging_data'; % Preprocesses functional data
+    fmapDir = 'fieldmaps'; % Fieldmap dir after moving from BIDS and SPM make fieldmap
 
     pinfo = dload(fullfile(baseDir,'participants.tsv'));
 

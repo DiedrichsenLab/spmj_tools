@@ -44,10 +44,10 @@ function varargout = template_anat(what, varargin)
             anat_name = subj_row.anat_name{1};
             
             % anatomical file
-            anat_full_path = fullfile(bidsDir,subj_id,'ses-01/anat',sprintf('%s_ses-01_%s.nii.gz', sub_id,anat_name));
+            anat_full_path = fullfile(baseDir,bidsDir,subj_id,'ses-01/anat',sprintf('%s_ses-01_%s.nii.gz', sub_id,anat_name));
             
            % Define output di
-            output_folder = fullfile(anatomicalDir, sub_id);
+            output_folder = fullfile(baseDir,anatomicalDir, sub_id);
             dircheck(output_folder)
             output_file = fullfile(output_folder,sprintf('%s_T1w_raw.nii.gz', sub_id);
             
@@ -68,13 +68,13 @@ function varargout = template_anat(what, varargin)
                 error('ANAT:reslice_LPI -> ''sn'' must be passed to this function.')
             end
             
-            subj_row=getrow(participant_data,participant_data.sn== s );
+            subj_row=getrow(pinfo,pinfo.sn== s );
             subj_id = subj_row.participant_id{1};
             
             % (1) Reslice anatomical image to set it within LPI co-ordinate frames
-            source  = fullfile(anatomicalDir, subj_id, sprintf('%s_T1w_raw.nii', subj_id));
+            source  = fullfile(baseDir,anatomicalDir, subj_id, sprintf('%s_T1w_raw.nii', subj_id));
             
-            dest    = fullfile(anatomicalDir, subj_id,sprintf('%s_T1w_LPI.nii', subj_id));
+            dest    = fullfile(baseDir,anatomicalDir, subj_id,sprintf('%s_T1w_LPI.nii', subj_id));
             spmj_reslice_LPI(source,'name', dest);
             
             % (2) In the resliced image, set translation to zero
@@ -96,11 +96,11 @@ function varargout = template_anat(what, varargin)
                 end
                 
                 % get subj row from participants.tsv
-                subj_row=getrow(participant_data,participant_data.sn== sn);
+                subj_row=getrow(pinfo,pinfo.sn== sn);
                 subj_id = subj_row.participant_id{1};
 
                 % Get the anat of subject
-                subj_anat_img = fullfile(anatomicalDir, sub_id, sprintf('%s_T1w_LPI.nii', subj_id));
+                subj_anat_img = fullfile(baseDir,anatomicalDir, sub_id, sprintf('%s_T1w_LPI.nii', subj_id));
 
                 % get location of ac
                 locACx = subj_id.locACx;
@@ -127,13 +127,13 @@ function varargout = template_anat(what, varargin)
         sn=[];
         vararginoptions(varargin,{'sn'})
         if isempty(sn)
-            error('ANAT:center_ac -> ''sn'' must be passed to this function.')
+            error('ANAT:segment -> ''sn'' must be passed to this function.')
         end
         
-        subj_row=getrow(participant_data,participant_data.sn== s );
+        subj_row=getrow(pinfo,pinfo.sn== s );
         subj_id = subj_row.participant_id{1};
         
-        subj_anat = fullfile(anatomicalDir, sub_id, sprintf('%s_T1w.nii', subj_id);
+        subj_anat = fullfile(baseDir,anatomicalDir, sub_id, sprintf('%s_T1w.nii', subj_id);
 
         J.channel.vols     = {subj_anat};
         J.channel.biasreg  = 0.001;
@@ -173,6 +173,47 @@ function varargout = template_anat(what, varargin)
         J.warp.write   = [1 1];
         matlabbatch{1}.spm.spatial.preproc=J;
         spm_jobman('run',matlabbatch);
+        
+        case 'SURF:reconall' % Freesurfer reconall routine
+        % Calls recon-all, which performs, all of the
+        % FreeSurfer cortical reconstruction process
+        
+            sn=[];
+            vararginoptions(varargin,{'sn'})
+            if isempty(sn)
+                error('SURF:reconall -> ''sn'' must be passed to this function.')
+            end
+
+            subj_row=getrow(pinfo,pinfo.sn== s );
+            subj_id = subj_row.participant_id{1};   
+        
+            % recon all inputs
+            fs_dir = fullfile(baseDir,freesurferDir);
+            anatomical_dir = fullfile(baseDir,anatomicalDir);
+            anatomical_name = sprintf('%s_T1w.nii', subj_id);
+            
+            % Get the directory of subjects anatomical;
+            freesurfer_reconall(fs_dir, sub_id, ...
+                fullfile(anatomical_dir, sub_id, anatomical_name));
+            
+        case 'SURF:fs2wb'          % Resampling subject from freesurfer fsaverage to fs_LR        
+        res  = 32;          % resolution of the atlas. options are: 32, 164
+        hemi = [1, 2];      % list of hemispheres
+        
+        sn=[];
+        vararginoptions(varargin,{'sn'})
+        if isempty(sn)
+            error('SURF:fs2wb -> ''sn'' must be passed to this function.')
+        end
+
+        subj_row=getrow(pinfo,pinfo.sn== s );
+        subj_id = subj_row.participant_id{1};  
+        
+        % get the subject id folder name
+        outDir   = fullfile(baseDir, surfacewbDir; 
+        dircheck(outDir);
+        fs_dir = fullfile(baseDir,freesurferDir);
+        surf_resliceFS2WB(sub_id, fs_dir, outDir, 'hemisphere', hemi, 'resolution', sprintf('%dk', res))
     
     end
             

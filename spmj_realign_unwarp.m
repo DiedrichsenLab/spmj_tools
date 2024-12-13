@@ -63,7 +63,8 @@ end
 % Flat hierarchy one imaging session 
 if (isempty(sess_names))
     for j=1:numel(run_names)
-        file_name = fullfile(rawdata_dir,subj_name,sprintf('%s_%s.nii',subj_name,run_names{s}{j}));
+        file_name = fullfile(rawdata_dir,subj_name,sprintf('%s_%s.nii',subj_name,run_names{j}));
+        V = nifti(char(file_name));
         if (V.dat.dim==3)
             scans{1}= file_name;
         else 
@@ -74,8 +75,9 @@ if (isempty(sess_names))
         end
         J.data(j).scans = scans';
         clear scans; 
-        J.data(j).pmscan = {fullfile(dataDir, 'fieldmaps',subj_name,subfolderFieldmap,['vdm5_sc',subj_name,'_phase_',run_names{j},'.nii,1'])};
-    end 
+%         J.data(j).pmscan = {fullfile(fmap_dir ,subj_name,['vdm5_sc',subj_name,'_phase_',run_names{j},'.nii,1'])};
+        J.data(j).pmscan = {fullfile(fmap_dir ,subj_name,sprintf('vdm5_sc%s_phase_run_%d.nii,1', subj_name, j))};
+    end
 else  % Nested hierarchy with different subfolders for different sessions 
     indx = 1; 
     for s=1:numel(sess_names)
@@ -103,3 +105,4 @@ spm_jobman('run',matlabbatch);
 
 
 
+    

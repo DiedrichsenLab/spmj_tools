@@ -142,15 +142,40 @@ function varargout = template_functional_singlesess(what, varargin)
             delete(output_phase);
     
     
-        case 'FUNC:make_fmap'                
-            % Description:
-            % Generates VDM files from the presubtracted phase & magnitude
-            % images acquired from the field map sequence. Also, just as a
-            % quality control this function creates unwarped EPIs from the
-            % functional data with the prefix 'u' for each run. 
-            % ADD OUTPUTS DESCRIPTION
+        case 'FUNC:make_fmap' 
+            % Differences in magnetic susceptibility between tissues (e.g.,
+            % air-tissue or bone-tissue interfaces) can cause
+            % inhomogeneities in the magnetic field. These inhomogeneities
+            % result in spatial distortions along the phase-encoding
+            % direction, which is the direction in which spatial location
+            % is encoded using a phase gradient. To account for these
+            % distortions, this step generates a Voxel Displacement Map
+            % (VDM) for each run, saved as files named
+            % vdm5_sc<subj_id>_phase_run_XX.nii in the fieldmap directory.
+            % 
+            % The VDM assigns a value in millimeters to each voxel,
+            % indicating how far it should be shifted along the
+            % phase-encoding direction to correct for the distortion. If
+            % you open the VDM in FSLeyes, you will notice that the
+            % distortion is particularly strong in the temporal lobe due to
+            % proximity to the nasal cavities, where significant
+            % differences in magnetic susceptibility occur.
+            % 
+            % In the fieldmap directory, you will also find the intermediate
+            % files bmask<subj_id>_magnitude.nii and
+            % fpm_sc<subj_id>_phase.nii that are used for VDM calculation
+            % 
+            % In the imaging_data_raw directory, you will find unwarped
+            % functional volumes named u<subj_id>_run_XX.nii. These
+            % correspond to the corrected first volume of each functional
+            % run. Open them in FSL to inspect how the distortion was
+            % corrected using the VDM (this step is for quality checking;
+            % the actual unwarping is performed in a later step).
+            % 
+            % In addition, the imaging_raw_data directory contains the
+            % intermediate file wfmag_<subj_id>_run_XX.nii that is
+            % necessary to perform unwarping in eah run.
             
-            % handling input args:
             sn = [];
             vararginoptions(varargin,{'sn'})
             if isempty(sn)
@@ -161,33 +186,27 @@ function varargout = template_functional_singlesess(what, varargin)
             subj_row=getrow(pinfo, pinfo.sn== sn);
             
             % get subj_id
-            subj_id = subj_row.participant_id{1};
-
+            subj_id = subj_row.subj_id{1};
+            
             % get runs (FuncRuns column needs to be in participants.tsv)    
             runs = spmj_dotstr2array(subj_row.FuncRuns{1});
             
-            file_list = {}; % Initialize as an empty cell array
+            epi_files = {}; % Initialize as an empty cell array
             for run = runs
-                file_list{end+1} = sprintf('%s_run_%02d.nii', subj_id, run);
+                epi_files{end+1} = sprintf('%s_run_%02d.nii', subj_id, run);
             end
 
             [et1, et2, tert] = spmj_et1_et2_tert(baseDir, subj_id, sn);
 
-            % get runs (FuncRuns column needs to be in participants.tsv)    
-            runs = spmj_dotstr2array(sub_row.FuncRuns{1});
-
-            % subfolderFieldmap = sprintf('sess%d',sess);
-            % function to create the makefieldmap job and passing it to the SPM
-            % job manager:
-            spmj_makefieldmap(fmapDir, ...
+            spmj_makefieldmap(char(fullfile(baseDir, fmapDir, subj_id)), ...
                               sprintf('%s_magnitude.nii', subj_id),...
                               sprintf('%s_phase.nii', subj_id),...
                               'phase_encode', -1, ... % It's -1 (A>>P) or 1 (P>>A) and can be found in imaging sequence specifications
                               'et1', et1, ...
                               'et2', et2, ...
                               'tert', tert, ...
-                              'func_dir',fullfile(baseDir,imagingRawDir,subj_id),...
-                              'epi_files', file_list);
+                              'func_dir',char(fullfile(baseDir, fmapDir, subj_id)),...
+                              'epi_files', epi_files);
         
         case 'FUNC:realign_unwarp'      
             % Do spm_realign_unwarp

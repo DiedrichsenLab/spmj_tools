@@ -168,7 +168,7 @@ function varargout = template_functional_singlesess(what, varargin)
             
             file_list = {}; % Initialize as an empty cell array
             for run = runs
-                file_list{end+1} = replace(subj_row.FuncRawName, 'XX', sprinf('%02d', run));
+                file_list{end+1} = sprintf('%s_run_%02d.nii', subj_id, run);
             end
 
             [et1, et2, tert] = spmj_et1_et2_tert(baseDir, subj_id, sn);

@@ -1,11 +1,13 @@
 function varargout = template_functional_singlesess(what, varargin)
     
     % Use a different baseDir when using your local machine or the cbs
-    % server. Add more directory if needed.
-    if isfolder("/path/to/project/local/directory/")
-        baseDir = "/path/to/project/local/directory/";
-    elseif isfolder("/path/to/project/cifs/directory/")
-        baseDir = "/path/to/project/cifs/directory/";
+    % server. Add more directory if needed. Use single quotes ' and not
+    % double quotes " because some spm function raise error with double
+    % quotes
+    if isfolder('/path/to/project/local/directory/')
+        baseDir = '/path/to/project/local/directory/';
+    elseif isfolder('/path/to/project/cifs/directory/')
+        baseDir = '/path/to/project/cifs/directory/';
     else
         fprintf('Workdir not found. Mount or connect to server and try again.');
     end
@@ -198,20 +200,18 @@ function varargout = template_functional_singlesess(what, varargin)
 
             [et1, et2, tert] = spmj_et1_et2_tert(baseDir, subj_id, sn);
 
-            spmj_makefieldmap(char(fullfile(baseDir, fmapDir, subj_id)), ...
+            spmj_makefieldmap(fullfile(baseDir, fmapDir, subj_id), ...
                               sprintf('%s_magnitude.nii', subj_id),...
                               sprintf('%s_phase.nii', subj_id),...
                               'phase_encode', -1, ... % It's -1 (A>>P) or 1 (P>>A) and can be found in imaging sequence specifications
                               'et1', et1, ...
                               'et2', et2, ...
                               'tert', tert, ...
-                              'func_dir',char(fullfile(baseDir, fmapDir, subj_id)),...
+                              'func_dir',fullfile(baseDir, fmapDir, subj_id),...
                               'epi_files', epi_files);
         
         case 'FUNC:realign_unwarp'      
             % Do spm_realign_unwarp
-
-            startTR         = 1;                                                   % first TR after the dummy scans
             
             % handling input args:
             sn = [];
@@ -222,22 +222,25 @@ function varargout = template_functional_singlesess(what, varargin)
             end
 
             % get participant row from participant.tsv
-            subj_row=getrow(pinfo, pinfo.sn== sn);
+            subj_row=getrow(pinfo, pinfo.sn==sn);
             
             % get subj_id
             subj_id = subj_row.participant_id{1};
 
             % get runs (FuncRuns column needs to be in participants.tsv)    
-            runs = spmj_dotstr2array(sub_row.FuncRuns{1});
+            runs = spmj_dotstr2array(subj_row.FuncRuns{1});
+            run_names = {}; % Initialize as an empty cell array
+            for run = runs
+                run_names{end+1} = sprintf('run_%02d', run);
+            end
 
-            % Prefix of the functional files (default 'a')
-            prefixepi  = '';
-
-            spmj_realign_unwarp(baseDir,subj_id,runs, startTR, inf, ...
-                                'prefix',prefixepi,...
-                                'rawdataDir',fullfile(baseDir,imagingRawDir,subj_id),...
-                                'subfolderFieldmap','',...
-                                'rtm',rtm);
+            spmj_realign_unwarp(subj_id, ...
+                 run_names, ...
+                'rawdata_dir',fullfile(baseDir,imagingRawDir),...
+                'fmap_dir',fullfile(baseDir,fmapDir),...
+                'raw_name','run',...
+                'rtm',rtm);
+        
         
     
         case 'FUNC:inspect_realign'

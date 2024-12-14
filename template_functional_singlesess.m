@@ -262,14 +262,14 @@ function varargout = template_functional_singlesess(what, varargin)
             subj_id = subj_row.participant_id{1};
 
             % get runs (FuncRuns column needs to be in participants.tsv)    
-            runs = spmj_dotstr2array(sub_row.FuncRuns{1});
+            runs = spmj_dotstr2array(subj_row.FuncRuns{1});
             
-            file_list = {}; % Initialize as an empty cell array
+            run_list = {}; % Initialize as an empty cell array
             for run = runs
-                file_list{end+1} = ['rp_', subj_id, '_run_', run, '.txt'];
+                run_list{end+1} = ['rp_', subj_id, '_run_', run, '.txt'];
             end
 
-            smpj_plot_mov_corr(file_list)
+            smpj_plot_mov_corr(run_list)
 
         case 'FUNC:move_realigned_images'          
             % Move images created by realign(+unwarp) into imaging_data

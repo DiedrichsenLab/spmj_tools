@@ -1,4 +1,4 @@
-function [et1, et2, tert] = spmj_et1_et2_tert(baseDir, subj_name, sn)
+function [et1, et2, tert] = spmj_et1_et2_tert(fmapDir, funcDir, subj_name)
 % spmj_et1_et2_tert calculates MRI timing parameters for field map correction.
 %
 % This function reads the necessary MRI acquisition parameters from the
@@ -8,9 +8,9 @@ function [et1, et2, tert] = spmj_et1_et2_tert(baseDir, subj_name, sn)
 % time (tert) considering GRAPPA acceleration.
 %
 % Inputs:
-%   dataDir: The root directory of the project.
-%   subj_name: The subject's identifier (equal to subj_id in participants.tsv).
-%   sn: The subject's number in participants.tsv.
+%   fmapDir: path to fmap in BIDS direcotry.
+%   funcDir: path to func in BIDS direcotry.
+%   subj_name: The subject's name as it appears in the DICOM server.
 %
 % Outputs:
 %   et1: The first echo time in milliseconds.
@@ -19,13 +19,13 @@ function [et1, et2, tert] = spmj_et1_et2_tert(baseDir, subj_name, sn)
 %
 % by Marco Emanuele, March 2024
 
-fmapDir = fullfile(baseDir, "BIDS", subj_name, "fmap");
-funcDir = fullfile(baseDir, "BIDS", subj_name, "func");
+% fmapDir = fullfile(baseDir, "BIDS", subj_name, "fmap");
+% funcDir = fullfile(baseDir, "BIDS", subj_name, "func");
 
 phasediff = jsondecode(fileread(fullfile(fmapDir, ...
-    ['sub-' num2str(sn) '_phasediff.json'])));
+    ['sub-' subj_name '_phasediff.json'])));
 func1st = jsondecode(fileread(fullfile(funcDir, ...
-    ['sub-' num2str(sn) '_task-task_run-01_bold.json'])));
+    ['sub-' subj_name '_task-task_run-01_bold.json'])));
 
 %% compute tert
 % total EPI readout time = = echo spacing (in ms) * base resolution 

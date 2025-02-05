@@ -1,4 +1,4 @@
-function spmj_makefieldmap(fmap_dir,magnitude_img, phasediff_img, varargin)
+.function spmj_makefieldmap(fmap_dir,magnitude_img, phasediff_img, varargin)
 % function spmj_makefieldmap(varargin)
 %   fmap_dir: Directory that holds the fmap and will be used for output
 %   magnitude_img: Name of magnitude image 

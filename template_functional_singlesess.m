@@ -11,17 +11,27 @@ function varargout = template_functional_singlesess(what, varargin)
     else
         fprintf('Workdir not found. Mount or connect to server and try again.');
     end
-
+    
     bidsDir = 'BIDS'; % Raw data post AutoBids conversion
+    anatomicalDir = 'anatomicals';
     imagingRawDir = 'imaging_data_raw'; % Temporary directory for raw functional data
     imagingDir = 'imaging_data'; % Preprocesses functional data
     fmapDir = 'fieldmaps'; % Fieldmap dir after moving from BIDS and SPM make fieldmap
 
     pinfo = dload(fullfile(baseDir,'participants.tsv'));
 
+    % handling input args:
+    sn = [];
+    rtm = 0;
+    prefix = 'u';
+    vararginoptions(varargin,{'sn', 'rtm', 'prefix'})
+    if isempty(sn)
+        error('BIDS:move_unzip_raw_func -> ''sn'' must be passed to this function.')
+    end
+
     % get participant row from participant.tsv
     subj_row=getrow(pinfo, pinfo.sn== sn);
-    
+
     % get subj_id
     subj_id = subj_row.subj_id{1};
 
@@ -35,13 +45,6 @@ function varargout = template_functional_singlesess(what, varargin)
             % nRuns Nifti files named <subj_id>_run_XX.nii in the 
             % <project_id>/imaging_data_raw/<subj_id>/ directory.
             
-            % handling input args:
-            sn = [];
-            vararginoptions(varargin,{'sn'})
-            if isempty(sn)
-                error('BIDS:move_unzip_raw_func -> ''sn'' must be passed to this function.')
-            end
-
             % loop on runs of sess:
             for run = runs
                 
@@ -88,13 +91,6 @@ function varargout = template_functional_singlesess(what, varargin)
             % used to compute a fieldmap, which is essential for correcting
             % geometric distortions (unwarping) in other MRI sequences.
             
-            % handling input args:
-            sn = [];
-            vararginoptions(varargin,{'sn'})
-            if isempty(sn)
-                error('BIDS:move_unzip_raw_fmap -> ''sn'' must be passed to this function.')
-            end
-            
             % pull fmap raw names from the participant.tsv:
             fmapMagnitudeName_tmp = pinfo.fmapMagnitudeName{pinfo.sn==sn};
             magnitude = [fmapMagnitudeName_tmp '.nii.gz'];
@@ -137,8 +133,7 @@ function varargout = template_functional_singlesess(what, varargin)
             % delete the compressed file:
             delete(output_phase);
     
-    
-        case 'FUNC:make_fmap' 
+        case 'FUNC:make_fmap'                
             % Differences in magnetic susceptibility between tissues (e.g.,
             % air-tissue or bone-tissue interfaces) can cause
             % inhomogeneities in the magnetic field. These inhomogeneities
@@ -172,18 +167,14 @@ function varargout = template_functional_singlesess(what, varargin)
             % intermediate file wfmag_<subj_id>_run_XX.nii that is
             % necessary to perform unwarping in eah run.
             
-            sn = [];
-            vararginoptions(varargin,{'sn'})
-            if isempty(sn)
-                error('FUNC:make_fmap -> ''sn'' must be passed to this function.')
-            end
-            
-            epi_files = {}; % Initialize as an empty cell array
+            epi_list = {}; % Initialize as an empty cell array
             for run = runs
-                epi_files{end+1} = sprintf('%s_run_%02d.nii', subj_id, run);
+                epi_list{end+1} = replace(subj_row.FuncRawName, 'XX', sprinf('%02d', run));
             end
 
-            [et1, et2, tert] = spmj_et1_et2_tert(baseDir, subj_id, sn);
+            [et1, et2, tert] = spmj_et1_et2_tert(fullfile(baseDir, bidsDir, subj_id, 'fmap'),... 
+                fullfile(baseDir, bidsDir, subj_id, 'func'),...
+                num2str(sn));
 
             spmj_makefieldmap(fullfile(baseDir, fmapDir, subj_id), ...
                               sprintf('%s_magnitude.nii', subj_id),...
@@ -192,19 +183,12 @@ function varargout = template_functional_singlesess(what, varargin)
                               'et1', et1, ...
                               'et2', et2, ...
                               'tert', tert, ...
-                              'func_dir',fullfile(baseDir, fmapDir, subj_id),...
+                              'func_dir',fullfile(baseDir, imagingRawDir, subj_id),...
                               'epi_files', epi_files);
+
         
         case 'FUNC:realign_unwarp'      
             % Do spm_realign_unwarp
-            
-            % handling input args:
-            sn = [];
-            rtm = 0;
-            vararginoptions(varargin,{'sn','rtm'})
-            if isempty(sn)
-                error('FUNC:make_fmap -> ''sn'' must be passed to this function.')
-            end
 
             run_list = {}; % Initialize as an empty cell array
             for run = runs
@@ -212,7 +196,7 @@ function varargout = template_functional_singlesess(what, varargin)
             end
 
             spmj_realign_unwarp(subj_id, ...
-                 run_names, ...
+                 run_list, ...
                 'rawdata_dir',fullfile(baseDir,imagingRawDir),...
                 'fmap_dir',fullfile(baseDir,fmapDir),...
                 'raw_name','run',...
@@ -223,13 +207,6 @@ function varargout = template_functional_singlesess(what, varargin)
             % looks for motion correction logs into imaging_data, needs to
             % be run after realigned images are moved there from
             % imaging_data_raw
-
-            % handling input args:
-            sn = []; 
-            vararginoptions(varargin,{'sn'})
-            if isempty(sn)
-                error('FUNC:inspect_realign_parameters -> ''sn'' must be passed to this function.')
-            end
             
             run_list = {}; % Initialize as an empty cell array
             for run = runs
@@ -240,15 +217,6 @@ function varargout = template_functional_singlesess(what, varargin)
 
         case 'FUNC:move_realigned_images'          
             % Move images created by realign(+unwarp) into imaging_data
-            
-            % handling input args:
-            sn = [];
-            prefix = 'u';   % prefix of the 4D images after realign(+unwarp)
-            rtm = 0;        % realign_unwarp registered to the first volume (0) or mean image (1).
-            vararginoptions(varargin,{'sn','prefix','rtm'})
-            if isempty(sn)
-                error('FUNC:move_realigned_images -> ''sn'' must be passed to this function.')
-            end
             
             % loop on runs of the session:
             for run = runs
@@ -314,15 +282,6 @@ function varargout = template_functional_singlesess(what, varargin)
             % addition, this step generates five tissue probability maps
             % (c1-5) for grey matter, white matter, csf, bone and soft
             % tissue.
-            
-            % handling input args:
-            sn = [];
-            prefix = 'u';   % prefix of the 4D images after realign(+unwarp)
-            rtm = 0;        % realign_unwarp registered to the first volume (0) or mean image (1).
-            vararginoptions(varargin,{'sn','prefix','rtm'})
-            if isempty(sn)
-                error('FUNC:meanimage_bias_correction -> ''sn'' must be passed to this function.')
-            end
 
             run_list = {}; % Initialize as an empty cell array
             for run = runs
@@ -359,15 +318,6 @@ function varargout = template_functional_singlesess(what, varargin)
             %   compatible with SPM.
             
             % (2) Run automated co-registration to register bias-corrected meanimage to anatomical image
-            
-            % handling input args:
-            sn = [];
-            prefix = 'u';   % prefix of the 4D images after realign(+unwarp)
-            rtm = 0;        % realign_unwarp registered to the first volume (0) or mean image (1).
-            vararginoptions(varargin,{'sn','prefix','rtm'})
-            if isempty(sn)
-                error('FUNC:coreg -> ''sn'' must be passed to this function.')
-            end
 
             run_list = {}; % Initialize as an empty cell array
             for run = runs
@@ -405,15 +355,6 @@ function varargout = template_functional_singlesess(what, varargin)
             % we change the transformation matrices of all the functional
             % volumes to the transform matrix of the coregistered image,
             % they will all tranform into the anatomical coordinates space.
-    
-            % handling input args:
-            sn = [];
-            prefix = 'u';   % prefix of the 4D images after realign(+unwarp)
-            rtm = 0;        % realign_unwarp registered to the first volume (0) or mean image (1).
-            vararginoptions(varargin,{'sn','prefix','rtm'})
-            if isempty(sn)
-                error('FUNC:make_samealign -> ''sn'' must be passed to this function.')
-            end
 
             run_list = {}; % Initialize as an empty cell array
             for run = runs
@@ -440,15 +381,6 @@ function varargout = template_functional_singlesess(what, varargin)
         
         case 'FUNC:make_maskImage'       
             % Make mask images (noskull and gray_only) for 1st level glm
-            
-            % handling input args:
-            sn = [];
-            prefix = 'u';   % prefix of the 4D images after realign(+unwarp)
-            rtm = 0;        % realign_unwarp registered to the first volume (0) or mean image (1).
-            vararginoptions(varargin,{'sn','prefix','rtm'})
-            if isempty(sn)
-                error('FUNC:make_maskImage -> ''sn'' must be passed to this function.')
-            end
 
             run_list = {}; % Initialize as an empty cell array
             for run = runs

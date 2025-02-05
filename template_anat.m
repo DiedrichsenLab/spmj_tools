@@ -44,17 +44,17 @@ function varargout = template_anat(what, varargin)
             anat_name = subj_row.anat_name{1};
             
             % anatomical file
-            anat_full_path = fullfile(baseDir,bidsDir,subj_id,'ses-01/anat',sprintf('%s_ses-01_%s.nii.gz', sub_id,anat_name));
+            anat_full_path = fullfile(baseDir,bidsDir,subj_id,'ses-01/anat',sprintf('%s_ses-01_%s.nii.gz', subj_id,anat_name));
             
            % Define output di
-            output_folder = fullfile(baseDir,anatomicalDir, sub_id);
+            output_folder = fullfile(baseDir,anatomicalDir, subj_id);
             dircheck(output_folder)
-            output_file = fullfile(output_folder,sprintf('%s_T1w_raw.nii.gz', sub_id);
+            output_file = fullfile(output_folder,sprintf('%s_T1w_raw.nii.gz', subj_id));
             
             % copy file to destination:
             copyfile(anat_full_path,output_file);
             
-            % unzip the .gz files to make usable for SPM:
+            % unzip the .gz files to make usable for SPM: s\
             gunzip(output_file);
             
             % delete the compressed file:
@@ -100,7 +100,7 @@ function varargout = template_anat(what, varargin)
                 subj_id = subj_row.participant_id{1};
 
                 % Get the anat of subject
-                subj_anat_img = fullfile(baseDir,anatomicalDir, sub_id, sprintf('%s_T1w_LPI.nii', subj_id));
+                subj_anat_img = fullfile(baseDir,anatomicalDir, subj_id, sprintf('%s_T1w_LPI.nii', subj_id));
 
                 % get location of ac
                 locACx = subj_id.locACx;
@@ -117,7 +117,7 @@ function varargout = template_anat(what, varargin)
                 V.mat(1:3,4)    = oldOrig-loc_AC;
 
                 % Modify filename
-                new_filename = fullfile(anatomical_dir, sub_id, sprintf('%s_T1w.nii', subj_id));
+                new_filename = fullfile(anatomical_dir, subj_id, sprintf('%s_T1w.nii', subj_id));
                 V.fname = new_filename;
                 spm_write_vol(V,dat);
                 
@@ -133,7 +133,7 @@ function varargout = template_anat(what, varargin)
         subj_row=getrow(pinfo,pinfo.sn== s );
         subj_id = subj_row.participant_id{1};
         
-        subj_anat = fullfile(baseDir,anatomicalDir, sub_id, sprintf('%s_T1w.nii', subj_id);
+        subj_anat = fullfile(baseDir,anatomicalDir, subj_id, sprintf('%s_T1w.nii', subj_id));
 
         J.channel.vols     = {subj_anat};
         J.channel.biasreg  = 0.001;
@@ -193,8 +193,8 @@ function varargout = template_anat(what, varargin)
             anatomical_name = sprintf('%s_T1w.nii', subj_id);
             
             % Get the directory of subjects anatomical;
-            freesurfer_reconall(fs_dir, sub_id, ...
-                fullfile(anatomical_dir, sub_id, anatomical_name));
+            freesurfer_reconall(fs_dir, subj_id, ...
+                fullfile(anatomical_dir, subj_id, anatomical_name));
             
         case 'SURF:fs2wb'          % Resampling subject from freesurfer fsaverage to fs_LR        
         res  = 32;          % resolution of the atlas. options are: 32, 164
@@ -210,10 +210,10 @@ function varargout = template_anat(what, varargin)
         subj_id = subj_row.participant_id{1};  
         
         % get the subject id folder name
-        outDir   = fullfile(baseDir, surfacewbDir; 
+        outDir   = fullfile(baseDir, surfacewbDir); 
         dircheck(outDir);
         fs_dir = fullfile(baseDir,freesurferDir);
-        surf_resliceFS2WB(sub_id, fs_dir, outDir, 'hemisphere', hemi, 'resolution', sprintf('%dk', res))
+        surf_resliceFS2WB(subj_id, fs_dir, outDir, 'hemisphere', hemi, 'resolution', sprintf('%dk', res))
     
     end
             

@@ -421,7 +421,7 @@ function varargout = template_functional_singlesess(what, varargin)
             
             source = fullfile(baseDir,imagingDir,subj_id, 'rmask_gray.nii');
             dest = fullfile(baseDir,anatomicalDir,subj_id,'rmask_gray.nii');
-                movefile(source,dest);
+            movefile(source,dest);
             
     
     end 

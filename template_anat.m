@@ -5,7 +5,9 @@ function varargout = template_anat(what, varargin)
     % Requires a participants.tsv file in the baseDir with columns
     % sn: subject number (int)
     % participant_id: subject identifier (char)
-    % ...
+    % locACx: i location of Anerior commissure in voxel space (int)
+    % locACy: j location of Anerior commissure in voxel space (int)
+    % locACz: k location of Anerior commissure in voxel space (int)
 
     % Use a different baseDir when using your local machine or the cbs
     % server. Add more directory if needed.
@@ -92,42 +94,44 @@ function varargout = template_anat(what, varargin)
             spm_write_vol(V,dat);
             display 'Manually retrieve the location of the anterior commissure (x,y,z) before continuing'
         
-        case 'ANAT:center_ac' % recenter to AC (manually retrieve coordinates)
+        case 'ANAT:center_ac' 
+            % recenter to AC (manually retrieve coordinates)
             % Before running this step you need to manually fill in the AC
             % coordinates in the participants.tsv file
             % run spm display to get the AC coordinates
-                
-                sn=[];
-                vararginoptions(varargin,{'sn'})
-                if isempty(sn)
-                    error('ANAT:center_ac -> ''sn'' must be passed to this function.')
-                end
-                
-                % get subj row from participants.tsv
-                subj_row=getrow(pinfo,pinfo.sn== sn);
-                subj_id = subj_row.participant_id{1};
+            sn=[];
+            vararginoptions(varargin,{'sn'})
+            if isempty(sn)
+                error('ANAT:center_ac -> ''sn'' must be passed to this function.')
+            end
+            
+            % get subj row from participants.tsv
+            subj_row=getrow(pinfo,pinfo.sn== sn);
+            subj_id = subj_row.participant_id{1};
 
-                % Get the anat of subject
-                subj_anat_img = fullfile(baseDir,anatomicalDir, subj_id, sprintf('%s_T1w_LPI.nii', subj_id));
+            % Get the anat of subject
+            subj_anat_img = fullfile(baseDir,anatomicalDir, subj_id, sprintf('%s_T1w_LPI.nii', subj_id));
 
-                % get location of ac
-                locACx = subj_id.locACx;
-                locACy = subj_id.locACy;
-                locACz = subj_id.locACz;
+            % get location of ac
+            locACx = subj_row.locACx;
+            locACy = subj_row.locACy;
+            locACz = subj_row.locACz;
 
-                loc_AC = [locACx locACy locACz];
-                loc_AC = loc_AC';
+            loc_AC = [locACx locACy locACz];
+            loc_AC = loc_AC';
 
-                %recenter
-                V               = spm_vol(subj_anat_img);
-                dat             = spm_read_vols(V);
-                oldOrig         = V.mat(1:3,4);
-                V.mat(1:3,4)    = oldOrig-loc_AC;
+            %recenter
+            V               = spm_vol(subj_anat_img);
+            dat             = spm_read_vols(V);
+            % Solve the equation A @ locAC + Translation = 0
+            A = V.mat(1:3,1:3);
+            Trans = -A @ locAc;
+            V.mat(1:3,4) = Trans;
 
-                % Modify filename
-                new_filename = fullfile(anatomical_dir, subj_id, sprintf('%s_T1w.nii', subj_id));
-                V.fname = new_filename;
-                spm_write_vol(V,dat);
+            % Modify filename
+            new_filename = fullfile(baseDir,anatomicalDir, subj_id, sprintf('%s_T1w.nii', subj_id));
+            V.fname = new_filename;
+            spm_write_vol(V,dat);
                 
         case 'ANAT:segment' % segment the anatomical image
         % check results when done

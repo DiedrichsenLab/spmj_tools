@@ -1,5 +1,12 @@
 function varargout = template_anat(what, varargin)
-    
+    % DESCRIPTION:
+    % 
+
+    % Requires a participants.tsv file in the baseDir with columns
+    % sn: subject number (int)
+    % participant_id: subject identifier (char)
+    % ...
+
     % Use a different baseDir when using your local machine or the cbs
     % server. Add more directory if needed.
     if isfolder("/path/to/project/local/directory/")
@@ -35,7 +42,7 @@ function varargout = template_anat(what, varargin)
             end
             
             % get participant row from participant.tsv
-            subj_row=getrow(pinfo, pinfo.sn== sn);
+            subj_row = getrow(pinfo, pinfo.sn== sn);
             
             % get subj_id
             subj_id = subj_row.participant_id{1};
@@ -44,9 +51,10 @@ function varargout = template_anat(what, varargin)
             anat_name = subj_row.anat_name{1};
             
             % anatomical file
-            anat_full_path = fullfile(baseDir,bidsDir,subj_id,'ses-01/anat',sprintf('%s_ses-01_%s.nii.gz', subj_id,anat_name));
+            % COMMENT: ses-01/anat COULD BE sess-XXXX
+            anat_full_path = fullfile(baseDir,bidsDir,subj_id, 'ses-01/anat', sprintf('%s_ses-01_%s.nii.gz', subj_id, anat_name));
             
-           % Define output di
+           % Define output directory
             output_folder = fullfile(baseDir,anatomicalDir, subj_id);
             dircheck(output_folder)
             output_file = fullfile(output_folder,sprintf('%s_T1w_raw.nii.gz', subj_id));

@@ -125,7 +125,7 @@ function varargout = template_anat(what, varargin)
             dat             = spm_read_vols(V);
             % Solve the equation A @ locAC + Translation = 0
             A = V.mat(1:3,1:3);
-            Trans = -A @ locAc;
+            Trans = -A * loc_AC;
             V.mat(1:3,4) = Trans;
 
             % Modify filename

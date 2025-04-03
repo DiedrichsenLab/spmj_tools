@@ -11,7 +11,7 @@ function [SPM,Yhat,Yres, p_opt]=spmj_fit_hrfparams_example()
 my_cifti=cifti_read('y_raw.dtseries.nii');
 brain_model = my_cifti.diminfo{1}.models{1};  % Get the first brain model 
 % Yraw = double(my_cifti.cdata(brain_model.start:brain_model.start+brain_model.count-1,:)'); % Pick out data as a T x P matrix 
-Yraw = double(my_cifti.cdata(1000:2000,:)'); % Pick out data as a T x P matrix 
+Yraw = double(my_cifti.cdata(:,:)'); % Pick out data as a T x P matrix 
 clear my_cifti; % preserve memory 
 
 load SPM; % loading SPM structure 

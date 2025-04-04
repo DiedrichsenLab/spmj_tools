@@ -58,7 +58,7 @@ title('Run 1 - overall response');
 % response
 subplot(2,2,4);
 D = spmj_get_ons_struct(SPM);
-Yadj = Yres+Yres; 
+Yadj = Yhat+Yres; 
 pre = 10;
 post = 20;
 for i=1:size(D.block,1);
